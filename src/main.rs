@@ -3,34 +3,34 @@ mod bindings {
 }
 
 #[derive(Copy, Clone)]
-enum hotKeyButtons {
-    left_bottom = 1,
-    bottom = 2,
-    right_bottom = 3,
-    left_middle = 4,
-    right_middle = 6,
-    left_top = 7,
-    top = 8,
-    right_top = 9,
+enum HotKeyButtons {
+    LeftBottom = 1,
+    Bottom = 2,
+    RightBottom = 3,
+    LeftMiddle = 4,
+    RightMiddle = 6,
+    LeftTop = 7,
+    Top = 8,
+    RightTop = 9,
 }
 
-impl hotKeyButtons {
-    fn from_u32(value: u32) -> hotKeyButtons {
+impl HotKeyButtons {
+    fn from_u32(value: u32) -> HotKeyButtons {
         match value {
-            1 => hotKeyButtons::left_bottom,
-            2 => hotKeyButtons::bottom,
-            3 => hotKeyButtons::right_bottom,
-            4 => hotKeyButtons::left_middle,
-            6 => hotKeyButtons::right_middle,
-            7 => hotKeyButtons::left_top,
-            8 => hotKeyButtons::top,
-            9 => hotKeyButtons::right_top,
+            1 => HotKeyButtons::LeftBottom,
+            2 => HotKeyButtons::Bottom,
+            3 => HotKeyButtons::RightBottom,
+            4 => HotKeyButtons::LeftMiddle,
+            6 => HotKeyButtons::RightMiddle,
+            7 => HotKeyButtons::LeftTop,
+            8 => HotKeyButtons::Top,
+            9 => HotKeyButtons::RightTop,
             _ => panic!("Unknown value: {}", value),
         }
     }
 }
 
-struct window_target {
+struct WindowTarget {
     left: i32,
     top: i32,
     width: i32,
@@ -39,37 +39,35 @@ struct window_target {
 
 fn calculate_windows_rect(
     monitor_size: bindings::Windows::Win32::Foundation::SIZE,
-    pressed_key: hotKeyButtons,
-) -> window_target {
-    use bindings::Windows::Win32::Foundation::RECT;
-
+    pressed_key: HotKeyButtons,
+) -> WindowTarget {
     let left = match pressed_key {
-        hotKeyButtons::right_bottom | hotKeyButtons::right_middle | hotKeyButtons::right_top => {
+        HotKeyButtons::RightBottom | HotKeyButtons::RightMiddle | HotKeyButtons::RightTop => {
             monitor_size.cx / 2
         }
         _ => 0,
     };
 
     let top = match pressed_key {
-        hotKeyButtons::left_bottom | hotKeyButtons::bottom | hotKeyButtons::right_bottom => {
+        HotKeyButtons::LeftBottom | HotKeyButtons::Bottom | HotKeyButtons::RightBottom => {
             monitor_size.cy / 2
         }
         _ => 0,
     };
 
     let width = match pressed_key {
-        hotKeyButtons::bottom | hotKeyButtons::top => monitor_size.cx,
+        HotKeyButtons::Bottom | HotKeyButtons::Top => monitor_size.cx,
         _ => monitor_size.cx / 2,
     };
 
     let height = match pressed_key {
-        hotKeyButtons::left_middle | hotKeyButtons::right_middle => monitor_size.cy,
+        HotKeyButtons::LeftMiddle | HotKeyButtons::RightMiddle => monitor_size.cy,
         _ => monitor_size.cy / 2,
     };
 
     println!("{:?} - w:{:?} h:{:?} - l:{:?} t:{:?} w:{:?} h:{:?}", pressed_key as u8, monitor_size.cx, monitor_size.cy, left, top, width, height);
 
-    window_target {
+    WindowTarget {
         left: left,
         top: top,
         width: width,
@@ -129,35 +127,35 @@ fn get_foreground_window() -> bindings::Windows::Win32::Foundation::HWND {
 fn register_hotkeys() {
     let hot_keys = [
         (
-            hotKeyButtons::left_bottom,
+            HotKeyButtons::LeftBottom,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD1,
         ),
         (
-            hotKeyButtons::bottom,
+            HotKeyButtons::Bottom,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD2,
         ),
         (
-            hotKeyButtons::right_bottom,
+            HotKeyButtons::RightBottom,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD3,
         ),
         (
-            hotKeyButtons::left_middle,
+            HotKeyButtons::LeftMiddle,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD4,
         ),
         (
-            hotKeyButtons::right_middle,
+            HotKeyButtons::RightMiddle,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD6,
         ),
         (
-            hotKeyButtons::left_top,
+            HotKeyButtons::LeftTop,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD7,
         ),
         (
-            hotKeyButtons::top,
+            HotKeyButtons::Top,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD8,
         ),
         (
-            hotKeyButtons::right_top,
+            HotKeyButtons::RightTop,
             bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD9,
         ),
     ];
@@ -188,7 +186,7 @@ fn main() -> windows::Result<()> {
 
     loop {
         unsafe {
-            let message_return = bindings::Windows::Win32::UI::WindowsAndMessaging::GetMessageW(
+            let _message_return = bindings::Windows::Win32::UI::WindowsAndMessaging::GetMessageW(
                 &mut message,
                 bindings::Windows::Win32::Foundation::HWND::NULL,
                 0,
@@ -202,7 +200,7 @@ fn main() -> windows::Result<()> {
 
         let foreground_window = get_foreground_window();
         let monitor_size = get_monitor_size(foreground_window);
-        let windows_rect = calculate_windows_rect(monitor_size, hotKeyButtons::from_u32(pressed_key_u32));
+        let windows_rect = calculate_windows_rect(monitor_size, HotKeyButtons::from_u32(pressed_key_u32));
         unsafe {
             bindings::Windows::Win32::UI::WindowsAndMessaging::MoveWindow(
                 foreground_window,
@@ -214,5 +212,4 @@ fn main() -> windows::Result<()> {
             );
         }
     }
-    Ok(())
 }
