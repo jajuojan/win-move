@@ -109,9 +109,11 @@ fn get_monitor_size(
     unsafe {
         bindings::Windows::Win32::Graphics::Gdi::GetMonitorInfoW(monitor, &mut monitor_info);
     }
+
+    //TODO: also pass monitor r,l,t,b to support multiple monitors
     bindings::Windows::Win32::Foundation::SIZE {
-        cx: monitor_info.rcMonitor.right - monitor_info.rcMonitor.left,
-        cy: monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top,
+        cx: monitor_info.rcWork.right - monitor_info.rcWork.left,
+        cy: monitor_info.rcWork.bottom - monitor_info.rcWork.top,
     }
 }
 
