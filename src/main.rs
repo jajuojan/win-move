@@ -2,6 +2,7 @@ mod bindings {
     windows::include_bindings!();
 }
 
+// TODO: rename this to smt like action instead of button
 #[derive(Copy, Clone)]
 enum HotKeyButtons {
     LeftBottom = 1,
@@ -37,13 +38,74 @@ struct WindowTarget {
     height: i32,
 }
 
+struct WindowSize {
+    width: i32,
+    height: i32,
+}
+
+struct WindowBorderSize {
+    left: i32,
+    right: i32,
+    top: i32,
+    bottom: i32,
+}
+
+fn calculate_window_margin(
+    foreground_window: bindings::Windows::Win32::Foundation::HWND,
+) -> WindowBorderSize {
+    use bindings::Windows::Win32::Foundation::RECT;
+    use std::convert::TryFrom;
+
+    let mut r = RECT {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    };
+    let mut r2 = RECT {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    };
+
+    let bindings::Windows::Win32::Graphics::Dwm::DWMWINDOWATTRIBUTE(extended_frame_bounds) =
+        bindings::Windows::Win32::Graphics::Dwm::DWMWA_EXTENDED_FRAME_BOUNDS;
+
+    unsafe {
+        bindings::Windows::Win32::UI::WindowsAndMessaging::GetWindowRect(foreground_window, &mut r);
+
+        bindings::Windows::Win32::Graphics::Dwm::DwmGetWindowAttribute(
+            foreground_window,
+            u32::try_from(extended_frame_bounds).unwrap(),
+            &mut r2 as *mut _ as *mut _,
+            core::mem::size_of::<RECT>() as u32,
+        );
+    }
+
+    WindowBorderSize {
+        left: r.left - r2.left,
+        right: r.right - r2.right,
+        top: r.top - r2.top,
+        bottom: r.bottom - r2.bottom,
+    }
+}
+
+// 1px horizontal border seems to happen even when taking extended frame into account,
+// increase windows' width by 1px to compensate and move right windows left by 1px
+// The same for vertical borders seems to happen when the windows' vertical extended frame > 0
+// Take this into account as well (curently +2px in height)
+// TODO: Split the compensation of vertical border between top/bottom windows
+// TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
+// TODO: Test how this works with hidden taskbar
 fn calculate_windows_rect(
     monitor_size: bindings::Windows::Win32::Foundation::SIZE,
+    window_margin: WindowBorderSize,
     pressed_key: HotKeyButtons,
 ) -> WindowTarget {
     let left = match pressed_key {
         HotKeyButtons::RightBottom | HotKeyButtons::RightMiddle | HotKeyButtons::RightTop => {
-            monitor_size.cx / 2
+            (monitor_size.cx / 2) - 1
         }
         _ => 0,
     };
@@ -57,7 +119,7 @@ fn calculate_windows_rect(
 
     let width = match pressed_key {
         HotKeyButtons::Bottom | HotKeyButtons::Top => monitor_size.cx,
-        _ => monitor_size.cx / 2,
+        _ => (monitor_size.cx / 2) + 1,
     };
 
     let height = match pressed_key {
@@ -65,16 +127,20 @@ fn calculate_windows_rect(
         _ => monitor_size.cy / 2,
     };
 
-    println!("{:?} - w:{:?} h:{:?} - l:{:?} t:{:?} w:{:?} h:{:?}", pressed_key as u8, monitor_size.cx, monitor_size.cy, left, top, width, height);
+    println!(
+        "{:?} - w:{:?} h:{:?} - l:{:?} t:{:?} w:{:?} h:{:?}",
+        pressed_key as u8, monitor_size.cx, monitor_size.cy, left, top, width, height
+    );
 
     WindowTarget {
-        left: left,
+        left: left + window_margin.left,
         top: top,
-        width: width,
-        height: height,
+        width: width + window_margin.right + (-1 * window_margin.left),
+        height: height + window_margin.bottom + (if window_margin.bottom > 0 { 2 } else { 0 }),
     }
 }
 
+// TODO: rename to get_desktop_size ?
 fn get_monitor_size(
     foreground_window: bindings::Windows::Win32::Foundation::HWND,
 ) -> bindings::Windows::Win32::Foundation::SIZE {
@@ -168,6 +234,7 @@ fn register_hotkeys() {
                 bindings::Windows::Win32::Foundation::HWND::NULL,
                 hot_key.0 as i32,
                 bindings::Windows::Win32::UI::KeyboardAndMouseInput::MOD_CONTROL,
+                //    | bindings::Windows::Win32::UI::KeyboardAndMouseInput::MOD_ALT,
                 hot_key.1,
             );
         }
@@ -175,6 +242,7 @@ fn register_hotkeys() {
 }
 
 fn main() -> windows::Result<()> {
+    use std::convert::TryFrom;
     register_hotkeys();
 
     let mut message = bindings::Windows::Win32::UI::WindowsAndMessaging::MSG {
@@ -197,12 +265,15 @@ fn main() -> windows::Result<()> {
         }
 
         let bindings::Windows::Win32::Foundation::WPARAM(pressed_key_usize) = message.wParam;
-        use std::convert::TryFrom;
-        let pressed_key_u32 = u32::try_from(pressed_key_usize).unwrap();
 
         let foreground_window = get_foreground_window();
         let monitor_size = get_monitor_size(foreground_window);
-        let windows_rect = calculate_windows_rect(monitor_size, HotKeyButtons::from_u32(pressed_key_u32));
+        let window_margin = calculate_window_margin(foreground_window);
+        let windows_rect = calculate_windows_rect(
+            monitor_size,
+            window_margin,
+            HotKeyButtons::from_u32(u32::try_from(pressed_key_usize).unwrap()),
+        );
         unsafe {
             bindings::Windows::Win32::UI::WindowsAndMessaging::MoveWindow(
                 foreground_window,
