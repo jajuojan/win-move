@@ -1,0 +1,20 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+
+  check_compilation:
+    name: Check compilation
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
