@@ -38,11 +38,7 @@ struct WindowTarget {
     height: i32,
 }
 
-struct WindowSize {
-    width: i32,
-    height: i32,
-}
-
+#[allow(dead_code)]
 struct WindowBorderSize {
     left: i32,
     right: i32,
@@ -75,13 +71,16 @@ fn calculate_window_margin(
     unsafe {
         bindings::Windows::Win32::UI::WindowsAndMessaging::GetWindowRect(foreground_window, &mut r);
 
-        bindings::Windows::Win32::Graphics::Dwm::DwmGetWindowAttribute(
+        if bindings::Windows::Win32::Graphics::Dwm::DwmGetWindowAttribute(
             foreground_window,
             u32::try_from(extended_frame_bounds).unwrap(),
             &mut r2 as *mut _ as *mut _,
             core::mem::size_of::<RECT>() as u32,
-        );
-    }
+        )
+        .is_err() {
+            panic!("Error from DwmGetWindowAttribute");
+        }
+    };
 
     WindowBorderSize {
         left: r.left - r2.left,
@@ -134,8 +133,8 @@ fn calculate_windows_rect(
 
     WindowTarget {
         left: left + window_margin.left,
-        top: top,
-        width: width + window_margin.right + (-1 * window_margin.left),
+        top,
+        width: width + window_margin.right - window_margin.left,
         height: height + window_margin.bottom + (if window_margin.bottom > 0 { 2 } else { 0 }),
     }
 }
