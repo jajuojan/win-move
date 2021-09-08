@@ -31,6 +31,13 @@ impl HotKeyButtons {
     }
 }
 
+struct MonitorInfo {
+    width: i32,
+    height: i32,
+    x_offset: i32,
+    y_offset: i32,
+}
+
 struct WindowTarget {
     left: i32,
     top: i32,
@@ -98,37 +105,37 @@ fn calculate_window_margin(
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
 // TODO: Test how this works with hidden taskbar
 fn calculate_windows_rect(
-    monitor_size: bindings::Windows::Win32::Foundation::SIZE,
+    monitor_info: MonitorInfo,
     window_margin: WindowBorderSize,
     pressed_key: HotKeyButtons,
 ) -> WindowTarget {
     let left = match pressed_key {
         HotKeyButtons::RightBottom | HotKeyButtons::RightMiddle | HotKeyButtons::RightTop => {
-            (monitor_size.cx / 2) - 1
+            (monitor_info.width / 2) - 1
         }
         _ => 0,
-    };
+    } + monitor_info.x_offset;
 
     let top = match pressed_key {
         HotKeyButtons::LeftBottom | HotKeyButtons::Bottom | HotKeyButtons::RightBottom => {
-            monitor_size.cy / 2
+            monitor_info.height / 2
         }
         _ => 0,
-    };
+    } + monitor_info.y_offset;
 
     let width = match pressed_key {
-        HotKeyButtons::Bottom | HotKeyButtons::Top => monitor_size.cx,
-        _ => (monitor_size.cx / 2) + 1,
+        HotKeyButtons::Bottom | HotKeyButtons::Top => monitor_info.width,
+        _ => (monitor_info.width / 2) + 1,
     };
 
     let height = match pressed_key {
-        HotKeyButtons::LeftMiddle | HotKeyButtons::RightMiddle => monitor_size.cy,
-        _ => monitor_size.cy / 2,
+        HotKeyButtons::LeftMiddle | HotKeyButtons::RightMiddle => monitor_info.height,
+        _ => monitor_info.height / 2,
     };
 
     println!(
         "{:?} - w:{:?} h:{:?} - l:{:?} t:{:?} w:{:?} h:{:?}",
-        pressed_key as u8, monitor_size.cx, monitor_size.cy, left, top, width, height
+        pressed_key as u8, monitor_info.width, monitor_info.height, left, top, width, height
     );
 
     WindowTarget {
@@ -139,10 +146,9 @@ fn calculate_windows_rect(
     }
 }
 
-// TODO: rename to get_desktop_size ?
-fn get_monitor_size(
+fn get_monitor_info(
     foreground_window: bindings::Windows::Win32::Foundation::HWND,
-) -> bindings::Windows::Win32::Foundation::SIZE {
+) -> MonitorInfo {
     use bindings::Windows::Win32::Foundation::RECT;
     use bindings::Windows::Win32::Graphics::Gdi::MONITORINFO;
 
@@ -175,10 +181,11 @@ fn get_monitor_size(
         bindings::Windows::Win32::Graphics::Gdi::GetMonitorInfoW(monitor, &mut monitor_info);
     }
 
-    //TODO: also pass monitor r,l,t,b to support multiple monitors
-    bindings::Windows::Win32::Foundation::SIZE {
-        cx: monitor_info.rcWork.right - monitor_info.rcWork.left,
-        cy: monitor_info.rcWork.bottom - monitor_info.rcWork.top,
+    MonitorInfo {
+        width: monitor_info.rcWork.right - monitor_info.rcWork.left,
+        height: monitor_info.rcWork.bottom - monitor_info.rcWork.top,
+        x_offset: monitor_info.rcWork.left,
+        y_offset: monitor_info.rcWork.top,
     }
 }
 
@@ -266,10 +273,10 @@ fn main() -> windows::Result<()> {
         let bindings::Windows::Win32::Foundation::WPARAM(pressed_key_usize) = message.wParam;
 
         let foreground_window = get_foreground_window();
-        let monitor_size = get_monitor_size(foreground_window);
+        let monitor_info = get_monitor_info(foreground_window);
         let window_margin = calculate_window_margin(foreground_window);
         let windows_rect = calculate_windows_rect(
-            monitor_size,
+            monitor_info,
             window_margin,
             HotKeyButtons::from_u32(u32::try_from(pressed_key_usize).unwrap()),
         );
