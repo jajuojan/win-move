@@ -133,11 +133,6 @@ fn calculate_windows_rect(
         _ => monitor_info.height / 2,
     };
 
-    println!(
-        "{:?} - w:{:?} h:{:?} - l:{:?} t:{:?} w:{:?} h:{:?}",
-        pressed_key as u8, monitor_info.width, monitor_info.height, left, top, width, height
-    );
-
     WindowTarget {
         left: left + window_margin.left,
         top,
