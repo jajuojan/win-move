@@ -39,6 +39,6 @@ jobs:
         with:
           upload_url: ${{ steps.release_please.outputs.upload_url }}
           asset_path: target/release/win-move.exe
-          asset_name: win-move.zip
+          asset_name: win-move.exe
           asset_content_type: application/octet-stream
         if: ${{ steps.release_please.outputs.release_created }}
