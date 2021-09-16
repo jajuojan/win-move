@@ -12,34 +12,22 @@ env:
 jobs:
   clippy:
     name: Clippy
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - uses: actions-rs/toolchain@v1
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           profile: minimal
           override: true
           components: clippy
 
-      - uses: actions-rs/clippy-check@v1
+      - name: Run Clippy
+        # uses: actions-rs/clippy-check@v1
+        uses: ErichDonGubler/clippy-check@6723b97308d5e57f643a52398b9e5121813b5834
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
-
-
-  # check:
-  #   name: Check
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #
-  #     - uses: actions-rs/toolchain@v1
-  #       with:
-  #         toolchain: stable
-  #         profile: minimal
-  #         override: true
-  #
-  #     - name: Cargo check
-  #       run: cargo check --locked --verbose
