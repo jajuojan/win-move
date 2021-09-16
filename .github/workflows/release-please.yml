@@ -9,29 +9,33 @@ jobs:
   release-please:
     runs-on: windows-latest
     steps:
-      - uses: GoogleCloudPlatform/release-please-action@v2
+      - name: Run release-please
+        uses: GoogleCloudPlatform/release-please-action@v2
         id: release_please
         with:
           release-type: rust
           package-name: Win-Move
 
-      - uses: actions/checkout@v2
+      - name: RELEASE - Checkout code
+        uses: actions/checkout@v2
         if: ${{ steps.release_please.outputs.release_created }}
 
-      - uses: actions-rs/toolchain@v1
+      - name: RELEASE - Install Rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
-          toolchain: 1.54.0
+          toolchain: stable
           profile: minimal
           override: true
         if: ${{ steps.release_please.outputs.release_created }}
 
-      - uses: actions-rs/cargo@v1
+      - name: RELEASE - Cargo build
+        uses: actions-rs/cargo@v1
         with:
           command: build
           args: --locked --release
         if: ${{ steps.release_please.outputs.release_created }}
 
-      - name: Upload Release Asset
+      - name: RELEASE - Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
