@@ -53,7 +53,42 @@ struct WindowBorderSize {
     bottom: i32,
 }
 
-fn calculate_window_margin(
+// https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement?redirectedfrom=MSDN
+fn get_window_info(foreground_window: bindings::Windows::Win32::Foundation::HWND) {
+    use bindings::Windows::Win32::Foundation::POINT;
+    use bindings::Windows::Win32::Foundation::RECT;
+    use bindings::Windows::Win32::UI::WindowsAndMessaging::WINDOWPLACEMENT;
+    use std::convert::TryFrom;
+    use std::mem::size_of;
+
+    let mut a = WINDOWPLACEMENT {
+        length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
+        flags: bindings::Windows::Win32::UI::WindowsAndMessaging::WINDOWPLACEMENT_FLAGS(0),
+        showCmd: bindings::Windows::Win32::UI::WindowsAndMessaging::SHOW_WINDOW_CMD(0),
+        ptMinPosition: POINT { x: 0, y: 0 },
+        ptMaxPosition: POINT { x: 0, y: 0 },
+        rcNormalPosition: RECT {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0,
+        },
+    };
+
+    unsafe {
+        bindings::Windows::Win32::UI::WindowsAndMessaging::GetWindowPlacement(
+            foreground_window,
+            &mut a,
+        );
+    };
+
+    /*println!(
+        "{:?}",
+        a.flags
+    );*/
+}
+
+fn get_window_margin(
     foreground_window: bindings::Windows::Win32::Foundation::HWND,
 ) -> WindowBorderSize {
     use bindings::Windows::Win32::Foundation::RECT;
@@ -84,7 +119,8 @@ fn calculate_window_margin(
             &mut r2 as *mut _ as *mut _,
             core::mem::size_of::<RECT>() as u32,
         )
-        .is_err() {
+        .is_err()
+        {
             panic!("Error from DwmGetWindowAttribute");
         }
     };
@@ -141,9 +177,7 @@ fn calculate_windows_rect(
     }
 }
 
-fn get_monitor_info(
-    foreground_window: bindings::Windows::Win32::Foundation::HWND,
-) -> MonitorInfo {
+fn get_monitor_info(foreground_window: bindings::Windows::Win32::Foundation::HWND) -> MonitorInfo {
     use bindings::Windows::Win32::Foundation::RECT;
     use bindings::Windows::Win32::Graphics::Gdi::MONITORINFO;
 
@@ -268,8 +302,9 @@ fn main() -> windows::Result<()> {
         let bindings::Windows::Win32::Foundation::WPARAM(pressed_key_usize) = message.wParam;
 
         let foreground_window = get_foreground_window();
+        get_window_info(foreground_window);
         let monitor_info = get_monitor_info(foreground_window);
-        let window_margin = calculate_window_margin(foreground_window);
+        let window_margin = get_window_margin(foreground_window);
         let windows_rect = calculate_windows_rect(
             monitor_info,
             window_margin,
