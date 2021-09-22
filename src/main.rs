@@ -2,6 +2,23 @@ mod bindings {
     windows::include_bindings!();
 }
 
+use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
+use bindings::Windows::Win32::Graphics::Dwm::{
+    DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
+};
+use bindings::Windows::Win32::Graphics::Gdi::{
+    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+};
+use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
+use bindings::Windows::Win32::UI::KeyboardAndMouseInput::RegisterHotKey;
+use bindings::Windows::Win32::UI::WindowsAndMessaging;
+use bindings::Windows::Win32::UI::WindowsAndMessaging::{
+    GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow, MSG,
+    SHOW_WINDOW_CMD, WINDOWPLACEMENT, WINDOWPLACEMENT_FLAGS,
+};
+use std::convert::TryFrom;
+use std::mem::size_of;
+
 // TODO: rename this to smt like action instead of button
 #[derive(Copy, Clone)]
 enum HotKeyButtons {
@@ -54,17 +71,11 @@ struct WindowBorderSize {
 }
 
 // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement?redirectedfrom=MSDN
-fn get_window_info(foreground_window: bindings::Windows::Win32::Foundation::HWND) {
-    use bindings::Windows::Win32::Foundation::POINT;
-    use bindings::Windows::Win32::Foundation::RECT;
-    use bindings::Windows::Win32::UI::WindowsAndMessaging::WINDOWPLACEMENT;
-    use std::convert::TryFrom;
-    use std::mem::size_of;
-
+fn get_window_info(foreground_window: HWND) {
     let mut a = WINDOWPLACEMENT {
         length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
-        flags: bindings::Windows::Win32::UI::WindowsAndMessaging::WINDOWPLACEMENT_FLAGS(0),
-        showCmd: bindings::Windows::Win32::UI::WindowsAndMessaging::SHOW_WINDOW_CMD(0),
+        flags: WINDOWPLACEMENT_FLAGS(0),
+        showCmd: SHOW_WINDOW_CMD(0),
         ptMinPosition: POINT { x: 0, y: 0 },
         ptMaxPosition: POINT { x: 0, y: 0 },
         rcNormalPosition: RECT {
@@ -76,10 +87,7 @@ fn get_window_info(foreground_window: bindings::Windows::Win32::Foundation::HWND
     };
 
     unsafe {
-        bindings::Windows::Win32::UI::WindowsAndMessaging::GetWindowPlacement(
-            foreground_window,
-            &mut a,
-        );
+        GetWindowPlacement(foreground_window, &mut a);
     };
 
     /*println!(
@@ -88,12 +96,7 @@ fn get_window_info(foreground_window: bindings::Windows::Win32::Foundation::HWND
     );*/
 }
 
-fn get_window_margin(
-    foreground_window: bindings::Windows::Win32::Foundation::HWND,
-) -> WindowBorderSize {
-    use bindings::Windows::Win32::Foundation::RECT;
-    use std::convert::TryFrom;
-
+fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
     let mut r = RECT {
         left: 0,
         top: 0,
@@ -107,13 +110,12 @@ fn get_window_margin(
         bottom: 0,
     };
 
-    let bindings::Windows::Win32::Graphics::Dwm::DWMWINDOWATTRIBUTE(extended_frame_bounds) =
-        bindings::Windows::Win32::Graphics::Dwm::DWMWA_EXTENDED_FRAME_BOUNDS;
+    let DWMWINDOWATTRIBUTE(extended_frame_bounds) = DWMWA_EXTENDED_FRAME_BOUNDS;
 
     unsafe {
-        bindings::Windows::Win32::UI::WindowsAndMessaging::GetWindowRect(foreground_window, &mut r);
+        GetWindowRect(foreground_window, &mut r);
 
-        if bindings::Windows::Win32::Graphics::Dwm::DwmGetWindowAttribute(
+        if DwmGetWindowAttribute(
             foreground_window,
             u32::try_from(extended_frame_bounds).unwrap(),
             &mut r2 as *mut _ as *mut _,
@@ -177,16 +179,10 @@ fn calculate_windows_rect(
     }
 }
 
-fn get_monitor_info(foreground_window: bindings::Windows::Win32::Foundation::HWND) -> MonitorInfo {
-    use bindings::Windows::Win32::Foundation::RECT;
-    use bindings::Windows::Win32::Graphics::Gdi::MONITORINFO;
-
+fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
     let monitor;
     unsafe {
-        monitor = bindings::Windows::Win32::Graphics::Gdi::MonitorFromWindow(
-            foreground_window,
-            bindings::Windows::Win32::Graphics::Gdi::MONITOR_DEFAULTTONEAREST,
-        );
+        monitor = MonitorFromWindow(foreground_window, MONITOR_DEFAULTTONEAREST);
     }
 
     let mut monitor_info = MONITORINFO {
@@ -207,7 +203,7 @@ fn get_monitor_info(foreground_window: bindings::Windows::Win32::Foundation::HWN
     };
 
     unsafe {
-        bindings::Windows::Win32::Graphics::Gdi::GetMonitorInfoW(monitor, &mut monitor_info);
+        GetMonitorInfoW(monitor, &mut monitor_info);
     }
 
     MonitorInfo {
@@ -218,58 +214,33 @@ fn get_monitor_info(foreground_window: bindings::Windows::Win32::Foundation::HWN
     }
 }
 
-fn get_foreground_window() -> bindings::Windows::Win32::Foundation::HWND {
+fn get_foreground_window() -> HWND {
     let foreground_window;
     unsafe {
-        foreground_window =
-            bindings::Windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow();
+        foreground_window = GetForegroundWindow();
     }
     foreground_window
 }
 
 fn register_hotkeys() {
     let hot_keys = [
-        (
-            HotKeyButtons::LeftBottom,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD1,
-        ),
-        (
-            HotKeyButtons::Bottom,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD2,
-        ),
-        (
-            HotKeyButtons::RightBottom,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD3,
-        ),
-        (
-            HotKeyButtons::LeftMiddle,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD4,
-        ),
-        (
-            HotKeyButtons::RightMiddle,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD6,
-        ),
-        (
-            HotKeyButtons::LeftTop,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD7,
-        ),
-        (
-            HotKeyButtons::Top,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD8,
-        ),
-        (
-            HotKeyButtons::RightTop,
-            bindings::Windows::Win32::UI::WindowsAndMessaging::VK_NUMPAD9,
-        ),
+        (HotKeyButtons::LeftBottom, WindowsAndMessaging::VK_NUMPAD1),
+        (HotKeyButtons::Bottom, WindowsAndMessaging::VK_NUMPAD2),
+        (HotKeyButtons::RightBottom, WindowsAndMessaging::VK_NUMPAD3),
+        (HotKeyButtons::LeftMiddle, WindowsAndMessaging::VK_NUMPAD4),
+        (HotKeyButtons::RightMiddle, WindowsAndMessaging::VK_NUMPAD6),
+        (HotKeyButtons::LeftTop, WindowsAndMessaging::VK_NUMPAD7),
+        (HotKeyButtons::Top, WindowsAndMessaging::VK_NUMPAD8),
+        (HotKeyButtons::RightTop, WindowsAndMessaging::VK_NUMPAD9),
     ];
 
     for hot_key in hot_keys.iter() {
         unsafe {
-            bindings::Windows::Win32::UI::KeyboardAndMouseInput::RegisterHotKey(
-                bindings::Windows::Win32::Foundation::HWND::NULL,
+            RegisterHotKey(
+                HWND::NULL,
                 hot_key.0 as i32,
-                bindings::Windows::Win32::UI::KeyboardAndMouseInput::MOD_CONTROL,
-                //    | bindings::Windows::Win32::UI::KeyboardAndMouseInput::MOD_ALT,
+                KeyboardAndMouseInput::MOD_CONTROL,
+                //    | KeyboardAndMouseInput::MOD_ALT,
                 hot_key.1,
             );
         }
@@ -277,29 +248,23 @@ fn register_hotkeys() {
 }
 
 fn main() -> windows::Result<()> {
-    use std::convert::TryFrom;
     register_hotkeys();
 
-    let mut message = bindings::Windows::Win32::UI::WindowsAndMessaging::MSG {
-        hwnd: bindings::Windows::Win32::Foundation::HWND::NULL,
+    let mut message = MSG {
+        hwnd: HWND::NULL,
         message: 0,
-        wParam: bindings::Windows::Win32::Foundation::WPARAM(0),
-        lParam: bindings::Windows::Win32::Foundation::LPARAM(0),
+        wParam: WPARAM(0),
+        lParam: LPARAM(0),
         time: 0,
-        pt: bindings::Windows::Win32::Foundation::POINT { x: 0, y: 0 },
+        pt: POINT { x: 0, y: 0 },
     };
 
     loop {
         unsafe {
-            let _message_return = bindings::Windows::Win32::UI::WindowsAndMessaging::GetMessageW(
-                &mut message,
-                bindings::Windows::Win32::Foundation::HWND::NULL,
-                0,
-                0,
-            );
+            let _message_return = GetMessageW(&mut message, HWND::NULL, 0, 0);
         }
 
-        let bindings::Windows::Win32::Foundation::WPARAM(pressed_key_usize) = message.wParam;
+        let WPARAM(pressed_key_usize) = message.wParam;
 
         let foreground_window = get_foreground_window();
         get_window_info(foreground_window);
@@ -311,7 +276,7 @@ fn main() -> windows::Result<()> {
             HotKeyButtons::from_u32(u32::try_from(pressed_key_usize).unwrap()),
         );
         unsafe {
-            bindings::Windows::Win32::UI::WindowsAndMessaging::MoveWindow(
+            MoveWindow(
                 foreground_window,
                 windows_rect.left,
                 windows_rect.top,
