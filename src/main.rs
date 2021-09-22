@@ -119,7 +119,7 @@ fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
             foreground_window,
             u32::try_from(extended_frame_bounds).unwrap(),
             &mut r2 as *mut _ as *mut _,
-            core::mem::size_of::<RECT>() as u32,
+            u32::try_from(size_of::<RECT>()).unwrap(),
         )
         .is_err()
         {
@@ -186,7 +186,7 @@ fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
     }
 
     let mut monitor_info = MONITORINFO {
-        cbSize: core::mem::size_of::<MONITORINFO>() as u32,
+        cbSize: u32::try_from(size_of::<MONITORINFO>()).unwrap(),
         rcMonitor: RECT {
             left: 0,
             top: 0,
