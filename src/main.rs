@@ -13,8 +13,9 @@ use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
 use bindings::Windows::Win32::UI::KeyboardAndMouseInput::RegisterHotKey;
 use bindings::Windows::Win32::UI::WindowsAndMessaging;
 use bindings::Windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow, MSG,
-    SHOW_WINDOW_CMD, WINDOWPLACEMENT, WINDOWPLACEMENT_FLAGS,
+    GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow,
+    SetWindowPlacement, MSG, SHOW_WINDOW_CMD, SW_SHOWNORMAL, WINDOWPLACEMENT,
+    WINDOWPLACEMENT_FLAGS,
 };
 use std::convert::TryFrom;
 use std::mem::size_of;
@@ -71,8 +72,8 @@ struct WindowBorderSize {
 }
 
 // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement?redirectedfrom=MSDN
-fn get_window_info(foreground_window: HWND) {
-    let mut a = WINDOWPLACEMENT {
+fn get_window_info(foreground_window: HWND) -> WINDOWPLACEMENT {
+    let mut window_info = WINDOWPLACEMENT {
         length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
         flags: WINDOWPLACEMENT_FLAGS(0),
         showCmd: SHOW_WINDOW_CMD(0),
@@ -87,13 +88,18 @@ fn get_window_info(foreground_window: HWND) {
     };
 
     unsafe {
-        GetWindowPlacement(foreground_window, &mut a);
+        GetWindowPlacement(foreground_window, &mut window_info);
     };
+    window_info
+}
 
-    /*println!(
-        "{:?}",
-        a.flags
-    );*/
+fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
+    let mut window_info = get_window_info(foreground_window);
+    window_info.showCmd = SW_SHOWNORMAL;
+    unsafe {
+        SetWindowPlacement(foreground_window, &mut window_info);
+    }
+    window_info
 }
 
 fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
@@ -267,7 +273,6 @@ fn main() -> windows::Result<()> {
         let WPARAM(pressed_key_usize) = message.wParam;
 
         let foreground_window = get_foreground_window();
-        get_window_info(foreground_window);
         let monitor_info = get_monitor_info(foreground_window);
         let window_margin = get_window_margin(foreground_window);
         let windows_rect = calculate_windows_rect(
@@ -275,6 +280,7 @@ fn main() -> windows::Result<()> {
             window_margin,
             HotKeyButtons::from_u32(u32::try_from(pressed_key_usize).unwrap()),
         );
+        disable_window_snapping(foreground_window);
         unsafe {
             MoveWindow(
                 foreground_window,
