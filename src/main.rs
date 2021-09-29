@@ -97,7 +97,7 @@ fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
     let mut window_info = get_window_info(foreground_window);
     window_info.showCmd = SW_SHOWNORMAL;
     unsafe {
-        SetWindowPlacement(foreground_window, &mut window_info);
+        SetWindowPlacement(foreground_window, & window_info);
     }
     window_info
 }
