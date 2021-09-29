@@ -186,5 +186,5 @@ pub fn get_pressed_key() -> usize {
     }
 
     let WPARAM(pressed_key_usize) = message.wParam;
-    return pressed_key_usize;
+    pressed_key_usize
 }
