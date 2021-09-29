@@ -2,8 +2,7 @@ mod bindings {
     windows::include_bindings!();
 }
 
-use win_move::structs::{self, HotKeyButtons};
-
+use crate::structs::{HotKeyButtons, MonitorInfo, WindowBorderSize, WindowTarget};
 use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use bindings::Windows::Win32::Graphics::Dwm::{
     DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
@@ -53,7 +52,7 @@ pub fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
     window_info
 }
 
-pub fn get_window_margin(foreground_window: HWND) -> structs::WindowBorderSize {
+pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
     let mut r = RECT {
         left: 0,
         top: 0,
@@ -84,7 +83,7 @@ pub fn get_window_margin(foreground_window: HWND) -> structs::WindowBorderSize {
         }
     };
 
-    structs::WindowBorderSize {
+    WindowBorderSize {
         left: r.left - r2.left,
         right: r.right - r2.right,
         top: r.top - r2.top,
@@ -100,10 +99,10 @@ pub fn get_window_margin(foreground_window: HWND) -> structs::WindowBorderSize {
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
 // TODO: Test how this works with hidden taskbar
 pub fn calculate_windows_rect(
-    monitor_info: structs::MonitorInfo,
-    window_margin: structs::WindowBorderSize,
-    pressed_key: structs::HotKeyButtons,
-) -> structs::WindowTarget {
+    monitor_info: MonitorInfo,
+    window_margin: WindowBorderSize,
+    pressed_key: HotKeyButtons,
+) -> WindowTarget {
     let left = match pressed_key {
         HotKeyButtons::RightBottom | HotKeyButtons::RightMiddle | HotKeyButtons::RightTop => {
             (monitor_info.width / 2) - 1
@@ -128,7 +127,7 @@ pub fn calculate_windows_rect(
         _ => monitor_info.height / 2,
     };
 
-    structs::WindowTarget {
+    WindowTarget {
         left: left + window_margin.left,
         top,
         width: width + window_margin.right - window_margin.left,
@@ -136,7 +135,7 @@ pub fn calculate_windows_rect(
     }
 }
 
-pub fn get_monitor_info(foreground_window: HWND) -> structs::MonitorInfo {
+pub fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
     let monitor;
     unsafe {
         monitor = MonitorFromWindow(foreground_window, MONITOR_DEFAULTTONEAREST);
@@ -163,7 +162,7 @@ pub fn get_monitor_info(foreground_window: HWND) -> structs::MonitorInfo {
         GetMonitorInfoW(monitor, &mut monitor_info);
     }
 
-    structs::MonitorInfo {
+    MonitorInfo {
         width: monitor_info.rcWork.right - monitor_info.rcWork.left,
         height: monitor_info.rcWork.bottom - monitor_info.rcWork.top,
         x_offset: monitor_info.rcWork.left,
@@ -204,7 +203,7 @@ pub fn register_hotkeys() {
     }
 }
 
-pub fn move_window(foreground_window: HWND, windows_rect: structs::WindowTarget) {
+pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
     unsafe {
         MoveWindow(
             foreground_window,
