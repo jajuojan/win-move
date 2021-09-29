@@ -4,10 +4,12 @@ mod bindings {
 
 use std::convert::TryFrom;
 
-use win_move::{
+mod mswindows;
+use mswindows::{
     calculate_windows_rect, disable_window_snapping, get_foreground_window, get_monitor_info,
-    get_pressed_key, get_window_margin, move_window, register_hotkeys, HotKeyButtons,
+    get_pressed_key, get_window_margin, move_window, register_hotkeys,
 };
+use win_move::structs::HotKeyButtons;
 
 fn main() -> windows::Result<()> {
     register_hotkeys();
