@@ -4,7 +4,7 @@ use crate::mswindows::{
 };
 use std::convert::TryFrom;
 
-use crate::structs::{HotKeyButtons, MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
     loop {
@@ -15,7 +15,7 @@ pub fn main_loop() {
         let windows_rect = calculate_windows_rect(
             monitor_info,
             window_margin,
-            HotKeyButtons::from_u32(u32::try_from(pressed_key_usize).unwrap()),
+            HotKeyAction::from_u32(u32::try_from(pressed_key_usize).unwrap()),
         );
         disable_window_snapping(foreground_window);
         move_window(foreground_window, windows_rect)
@@ -32,29 +32,29 @@ pub fn main_loop() {
 pub fn calculate_windows_rect(
     monitor_info: MonitorInfo,
     window_margin: WindowBorderSize,
-    pressed_key: HotKeyButtons,
+    pressed_key: HotKeyAction,
 ) -> WindowTarget {
     let left = match pressed_key {
-        HotKeyButtons::RightBottom | HotKeyButtons::RightMiddle | HotKeyButtons::RightTop => {
+        HotKeyAction::RightBottom | HotKeyAction::RightMiddle | HotKeyAction::RightTop => {
             (monitor_info.width / 2) - 1
         }
         _ => 0,
     } + monitor_info.x_offset;
 
     let top = match pressed_key {
-        HotKeyButtons::LeftBottom | HotKeyButtons::Bottom | HotKeyButtons::RightBottom => {
+        HotKeyAction::LeftBottom | HotKeyAction::Bottom | HotKeyAction::RightBottom => {
             monitor_info.height / 2
         }
         _ => 0,
     } + monitor_info.y_offset;
 
     let width = match pressed_key {
-        HotKeyButtons::Bottom | HotKeyButtons::Top => monitor_info.width,
+        HotKeyAction::Bottom | HotKeyAction::Top => monitor_info.width,
         _ => (monitor_info.width / 2) + 1,
     };
 
     let height = match pressed_key {
-        HotKeyButtons::LeftMiddle | HotKeyButtons::RightMiddle => monitor_info.height,
+        HotKeyAction::LeftMiddle | HotKeyAction::RightMiddle => monitor_info.height,
         _ => monitor_info.height / 2,
     };
 

@@ -1,6 +1,5 @@
-// TODO: rename this to smt like action instead of button
 #[derive(Copy, Clone)]
-pub enum HotKeyButtons {
+pub enum HotKeyAction {
     LeftBottom = 1,
     Bottom = 2,
     RightBottom = 3,
@@ -11,20 +10,51 @@ pub enum HotKeyButtons {
     RightTop = 9,
 }
 
-impl HotKeyButtons {
-    pub fn from_u32(value: u32) -> HotKeyButtons {
+impl HotKeyAction {
+    pub fn from_u32(value: u32) -> HotKeyAction {
         match value {
-            1 => HotKeyButtons::LeftBottom,
-            2 => HotKeyButtons::Bottom,
-            3 => HotKeyButtons::RightBottom,
-            4 => HotKeyButtons::LeftMiddle,
-            6 => HotKeyButtons::RightMiddle,
-            7 => HotKeyButtons::LeftTop,
-            8 => HotKeyButtons::Top,
-            9 => HotKeyButtons::RightTop,
+            1 => HotKeyAction::LeftBottom,
+            2 => HotKeyAction::Bottom,
+            3 => HotKeyAction::RightBottom,
+            4 => HotKeyAction::LeftMiddle,
+            6 => HotKeyAction::RightMiddle,
+            7 => HotKeyAction::LeftTop,
+            8 => HotKeyAction::Top,
+            9 => HotKeyAction::RightTop,
             _ => panic!("Unknown value: {}", value),
         }
     }
+    //pub fn to_u32(&self) -> Option<u32> {
+    //    return 4;
+    //}
+}
+
+// TODO: This requires a better solution once keys are freely selectable in config
+/// Enums for buttons
+pub enum HotKeyButton {
+    VkNumpad1 = 1,
+    VkNumpad2 = 2,
+    VkNumpad3 = 3,
+    VkNumpad4 = 4,
+    VkNumpad5 = 5,
+    VkNumpad6 = 6,
+    VkNumpad7 = 7,
+    VkNumpad8 = 8,
+    VkNumpad9 = 9,
+    VkNumpad0 = 10,
+}
+
+/// Enums for modifiers
+pub enum HotKeyModifier {
+    None = 0,
+    ModControl = 1,
+    ModAlt = 2,
+}
+
+pub struct HotkeyMapping {
+    pub action: HotKeyAction,
+    pub key: HotKeyButton ,
+    pub modifier: HotKeyModifier,
 }
 
 pub struct MonitorInfo {

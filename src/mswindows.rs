@@ -2,7 +2,7 @@ mod bindings {
     windows::include_bindings!();
 }
 
-use crate::structs::{HotKeyButtons, MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
 use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use bindings::Windows::Win32::Graphics::Dwm::{
     DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
@@ -11,7 +11,7 @@ use bindings::Windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
 };
 use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
-use bindings::Windows::Win32::UI::KeyboardAndMouseInput::RegisterHotKey;
+use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{RegisterHotKey, HOT_KEY_MODIFIERS};
 use bindings::Windows::Win32::UI::WindowsAndMessaging;
 use bindings::Windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow,
@@ -133,29 +133,75 @@ pub fn get_foreground_window() -> HWND {
     foreground_window
 }
 
-pub fn register_hotkeys() {
-    let hot_keys = [
-        (HotKeyButtons::LeftBottom, WindowsAndMessaging::VK_NUMPAD1),
-        (HotKeyButtons::Bottom, WindowsAndMessaging::VK_NUMPAD2),
-        (HotKeyButtons::RightBottom, WindowsAndMessaging::VK_NUMPAD3),
-        (HotKeyButtons::LeftMiddle, WindowsAndMessaging::VK_NUMPAD4),
-        (HotKeyButtons::RightMiddle, WindowsAndMessaging::VK_NUMPAD6),
-        (HotKeyButtons::LeftTop, WindowsAndMessaging::VK_NUMPAD7),
-        (HotKeyButtons::Top, WindowsAndMessaging::VK_NUMPAD8),
-        (HotKeyButtons::RightTop, WindowsAndMessaging::VK_NUMPAD9),
-    ];
+struct HotkeyMappingWin {
+    action: HotKeyAction,
+    key: u32,
+    modifier: HOT_KEY_MODIFIERS,
+}
 
+// TODO: Implement mapping from HotkeyMapping
+fn map_keys() -> Vec<HotkeyMappingWin> {
+    let modifier = KeyboardAndMouseInput::MOD_CONTROL;
+    vec![
+        HotkeyMappingWin {
+            action: HotKeyAction::LeftBottom,
+            key: WindowsAndMessaging::VK_NUMPAD1,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::Bottom,
+            key: WindowsAndMessaging::VK_NUMPAD2,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::RightBottom,
+            key: WindowsAndMessaging::VK_NUMPAD3,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::LeftMiddle,
+            key: WindowsAndMessaging::VK_NUMPAD4,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::RightMiddle,
+            key: WindowsAndMessaging::VK_NUMPAD6,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::LeftTop,
+            key: WindowsAndMessaging::VK_NUMPAD7,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::Top,
+            key: WindowsAndMessaging::VK_NUMPAD8,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::RightTop,
+            key: WindowsAndMessaging::VK_NUMPAD9,
+            modifier,
+        },
+    ]
+}
+
+fn do_register_hotkeys(hot_keys: Vec<HotkeyMappingWin>) {
     for hot_key in hot_keys.iter() {
         unsafe {
             RegisterHotKey(
                 HWND::NULL,
-                hot_key.0 as i32,
-                KeyboardAndMouseInput::MOD_CONTROL,
-                //    | KeyboardAndMouseInput::MOD_ALT,
-                hot_key.1,
+                hot_key.action as i32,
+                hot_key.modifier,
+                hot_key.key,
             );
         }
     }
+}
+
+pub fn register_hotkeys() {
+    let hot_keys = map_keys();
+    do_register_hotkeys(hot_keys);
 }
 
 pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
