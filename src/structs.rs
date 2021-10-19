@@ -8,6 +8,9 @@ pub enum HotKeyAction {
     LeftTop = 7,
     Top = 8,
     RightTop = 9,
+    Minimize = 10,
+    Maximize = 11,
+    ChangeScreen = 12,
 }
 
 impl HotKeyAction {
@@ -21,6 +24,9 @@ impl HotKeyAction {
             7 => HotKeyAction::LeftTop,
             8 => HotKeyAction::Top,
             9 => HotKeyAction::RightTop,
+            10 => HotKeyAction::Minimize,
+            11 => HotKeyAction::Maximize,
+            12 => HotKeyAction::ChangeScreen,
             _ => panic!("Unknown value: {}", value),
         }
     }
@@ -53,7 +59,7 @@ pub enum HotKeyModifier {
 
 pub struct HotkeyMapping {
     pub action: HotKeyAction,
-    pub key: HotKeyButton ,
+    pub key: HotKeyButton,
     pub modifier: HotKeyModifier,
 }
 

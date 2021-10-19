@@ -217,7 +217,7 @@ pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
     }
 }
 
-pub fn get_pressed_key() -> usize {
+pub fn get_pressed_key() -> HotKeyAction {
     let mut message = MSG {
         hwnd: HWND::NULL,
         message: 0,
@@ -232,5 +232,5 @@ pub fn get_pressed_key() -> usize {
     }
 
     let WPARAM(pressed_key_usize) = message.wParam;
-    pressed_key_usize
+    HotKeyAction::from_u32(u32::try_from(pressed_key_usize).unwrap())
 }
