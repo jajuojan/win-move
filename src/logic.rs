@@ -24,7 +24,7 @@ pub fn main_loop() {
 // 1px horizontal border seems to happen even when taking extended frame into account,
 // increase windows' width by 1px to compensate and move right windows left by 1px
 // The same for vertical borders seems to happen when the windows' vertical extended frame > 0
-// Take this into account as well (curently +2px in height)
+// Take this into account as well (currently +2px in height)
 // TODO: Split the compensation of vertical border between top/bottom windows
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
 // TODO: Test how this works with hidden taskbar
