@@ -1,4 +1,4 @@
-mod bindings {
+pub mod bindings {
     windows::include_bindings!();
 }
 
@@ -125,12 +125,14 @@ pub fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
     }
 }
 
-pub fn get_foreground_window() -> HWND {
+pub fn get_foreground_window() -> SelectedWindow {
     let foreground_window;
     unsafe {
         foreground_window = GetForegroundWindow();
     }
-    foreground_window
+    SelectedWindow {
+        platform_specific_handle: foreground_window,
+    }
 }
 
 struct HotkeyMappingWin {
@@ -217,7 +219,7 @@ pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
     }
 }
 
-pub fn get_pressed_action() -> HotKeyAction {
+pub fn get_action_from_pressed_key() -> HotKeyAction {
     let mut message = MSG {
         hwnd: HWND::NULL,
         message: 0,
@@ -233,4 +235,8 @@ pub fn get_pressed_action() -> HotKeyAction {
 
     let WPARAM(pressed_key_usize) = message.wParam;
     HotKeyAction::from(u32::try_from(pressed_key_usize).unwrap())
+}
+
+pub struct SelectedWindow {
+    pub(crate) platform_specific_handle: HWND,
 }

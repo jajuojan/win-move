@@ -1,23 +1,18 @@
+/*mod bindings {
+    windows::include_bindings!();
+}*/
 use crate::mswindows::{
-    disable_window_snapping, get_foreground_window, get_monitor_info, get_pressed_action,
-    get_window_margin, move_window,
+    disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info,
+    get_window_margin, move_window, SelectedWindow,
 };
 
 use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
     loop {
-        let action = get_pressed_action();
+        let action = get_action_from_pressed_key();
         let foreground_window = get_foreground_window();
-        let monitor_info = get_monitor_info(foreground_window);
-        let window_margin = get_window_margin(foreground_window);
-        let windows_rect = calculate_windows_rect(
-            monitor_info,
-            window_margin,
-            action,
-        );
-        disable_window_snapping(foreground_window);
-        move_window(foreground_window, windows_rect)
+        implement_action_on_window(foreground_window, action);
     }
 }
 
@@ -63,4 +58,28 @@ pub fn calculate_windows_rect(
         width: width + window_margin.right - window_margin.left,
         height: height + window_margin.bottom + (if window_margin.bottom > 0 { 2 } else { 0 }),
     }
+}
+
+fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
+    if action <= HotKeyAction::RightTop {
+        implement_move_action_on_window(foreground_window, action);
+    } else if action == HotKeyAction::Minimize {
+        println!("TODO: Implement minimize");
+    } else if action == HotKeyAction::Maximize {
+        println!("TODO: Implement maximize");
+    } else if action == HotKeyAction::ChangeScreen {
+        println!("TODO: Implement change screen");
+    } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTop {
+        println!("TODO: Implement window resize");
+    } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTopHistoryAware {
+        println!("TODO: Implement window resize (hist)");
+    }
+}
+
+fn implement_move_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
+    let monitor_info = get_monitor_info(foreground_window.platform_specific_handle);
+    let window_margin = get_window_margin(foreground_window.platform_specific_handle);
+    let target_rect = calculate_windows_rect(monitor_info, window_margin, action);
+    disable_window_snapping(foreground_window.platform_specific_handle);
+    move_window(foreground_window.platform_specific_handle, target_rect)
 }

@@ -1,4 +1,4 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialOrd, PartialEq)]
 pub enum HotKeyAction {
     // Move window to specified location
     // TODO: rename these
