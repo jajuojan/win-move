@@ -2,7 +2,8 @@ pub mod bindings {
     windows::include_bindings!();
 }
 
-use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::hotkey_action::HotKeyAction;
+use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use bindings::Windows::Win32::Graphics::Dwm::{
     DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
@@ -146,43 +147,58 @@ fn map_keys() -> Vec<HotkeyMappingWin> {
     let modifier = KeyboardAndMouseInput::MOD_CONTROL;
     vec![
         HotkeyMappingWin {
-            action: HotKeyAction::LeftBottom,
+            action: HotKeyAction::MoveWindowToLeftBottom,
             key: WindowsAndMessaging::VK_NUMPAD1,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::Bottom,
+            action: HotKeyAction::MoveWindowToBottom,
             key: WindowsAndMessaging::VK_NUMPAD2,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::RightBottom,
+            action: HotKeyAction::MoveWindowToRightBottom,
             key: WindowsAndMessaging::VK_NUMPAD3,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::LeftMiddle,
+            action: HotKeyAction::MoveWindowToLeftMiddle,
             key: WindowsAndMessaging::VK_NUMPAD4,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::RightMiddle,
+            action: HotKeyAction::MoveWindowToRightMiddle,
             key: WindowsAndMessaging::VK_NUMPAD6,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::LeftTop,
+            action: HotKeyAction::MoveWindowToLeftTop,
             key: WindowsAndMessaging::VK_NUMPAD7,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::Top,
+            action: HotKeyAction::MoveWindowToTop,
             key: WindowsAndMessaging::VK_NUMPAD8,
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::RightTop,
+            action: HotKeyAction::MoveWindowToRightTop,
             key: WindowsAndMessaging::VK_NUMPAD9,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::MoveWindowToOtherScreen,
+            key: WindowsAndMessaging::VK_NUMPAD0,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::MinimizeWindow,
+            key: WindowsAndMessaging::VK_DECIMAL,
+            modifier,
+        },
+        HotkeyMappingWin {
+            action: HotKeyAction::MaximizeWindow,
+            key: WindowsAndMessaging::VK_NUMPAD5,
             modifier,
         },
     ]

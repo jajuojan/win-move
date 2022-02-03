@@ -1,12 +1,9 @@
-/*mod bindings {
-    windows::include_bindings!();
-}*/
+use crate::hotkey_action::HotKeyAction;
 use crate::mswindows::{
     disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info,
     get_window_margin, move_window, SelectedWindow,
 };
-
-use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
     loop {
@@ -29,26 +26,28 @@ pub fn calculate_windows_rect(
     action: HotKeyAction,
 ) -> WindowTarget {
     let left = match action {
-        HotKeyAction::RightBottom | HotKeyAction::RightMiddle | HotKeyAction::RightTop => {
-            (monitor_info.width / 2) - 1
-        }
+        HotKeyAction::MoveWindowToRightBottom
+        | HotKeyAction::MoveWindowToRightMiddle
+        | HotKeyAction::MoveWindowToRightTop => (monitor_info.width / 2) - 1,
         _ => 0,
     } + monitor_info.x_offset;
 
     let top = match action {
-        HotKeyAction::LeftBottom | HotKeyAction::Bottom | HotKeyAction::RightBottom => {
-            monitor_info.height / 2
-        }
+        HotKeyAction::MoveWindowToLeftBottom
+        | HotKeyAction::MoveWindowToBottom
+        | HotKeyAction::MoveWindowToRightBottom => monitor_info.height / 2,
         _ => 0,
     } + monitor_info.y_offset;
 
     let width = match action {
-        HotKeyAction::Bottom | HotKeyAction::Top => monitor_info.width,
+        HotKeyAction::MoveWindowToBottom | HotKeyAction::MoveWindowToTop => monitor_info.width,
         _ => (monitor_info.width / 2) + 1,
     };
 
     let height = match action {
-        HotKeyAction::LeftMiddle | HotKeyAction::RightMiddle => monitor_info.height,
+        HotKeyAction::MoveWindowToLeftMiddle | HotKeyAction::MoveWindowToRightMiddle => {
+            monitor_info.height
+        }
         _ => monitor_info.height / 2,
     };
 
@@ -61,13 +60,13 @@ pub fn calculate_windows_rect(
 }
 
 fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
-    if action <= HotKeyAction::RightTop {
+    if action <= HotKeyAction::MoveWindowToRightTop {
         implement_move_action_on_window(foreground_window, action);
-    } else if action == HotKeyAction::Minimize {
+    } else if action == HotKeyAction::MinimizeWindow {
         println!("TODO: Implement minimize");
-    } else if action == HotKeyAction::Maximize {
+    } else if action == HotKeyAction::MaximizeWindow {
         println!("TODO: Implement maximize");
-    } else if action == HotKeyAction::ChangeScreen {
+    } else if action == HotKeyAction::MoveWindowToOtherScreen {
         println!("TODO: Implement change screen");
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTop {
         println!("TODO: Implement window resize");
