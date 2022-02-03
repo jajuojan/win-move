@@ -31,28 +31,28 @@ pub fn main_loop() {
 pub fn calculate_windows_rect(
     monitor_info: MonitorInfo,
     window_margin: WindowBorderSize,
-    pressed_key: HotKeyAction,
+    action: HotKeyAction,
 ) -> WindowTarget {
-    let left = match pressed_key {
+    let left = match action {
         HotKeyAction::RightBottom | HotKeyAction::RightMiddle | HotKeyAction::RightTop => {
             (monitor_info.width / 2) - 1
         }
         _ => 0,
     } + monitor_info.x_offset;
 
-    let top = match pressed_key {
+    let top = match action {
         HotKeyAction::LeftBottom | HotKeyAction::Bottom | HotKeyAction::RightBottom => {
             monitor_info.height / 2
         }
         _ => 0,
     } + monitor_info.y_offset;
 
-    let width = match pressed_key {
+    let width = match action {
         HotKeyAction::Bottom | HotKeyAction::Top => monitor_info.width,
         _ => (monitor_info.width / 2) + 1,
     };
 
-    let height = match pressed_key {
+    let height = match action {
         HotKeyAction::LeftMiddle | HotKeyAction::RightMiddle => monitor_info.height,
         _ => monitor_info.height / 2,
     };
