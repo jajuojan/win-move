@@ -1,5 +1,5 @@
 use crate::mswindows::{
-    disable_window_snapping, get_foreground_window, get_monitor_info, get_pressed_key,
+    disable_window_snapping, get_foreground_window, get_monitor_info, get_pressed_action,
     get_window_margin, move_window,
 };
 
@@ -7,14 +7,14 @@ use crate::structs::{HotKeyAction, MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
     loop {
-        let pressed_hotkey = get_pressed_key();
+        let action = get_pressed_action();
         let foreground_window = get_foreground_window();
         let monitor_info = get_monitor_info(foreground_window);
         let window_margin = get_window_margin(foreground_window);
         let windows_rect = calculate_windows_rect(
             monitor_info,
             window_margin,
-            pressed_hotkey,
+            action,
         );
         disable_window_snapping(foreground_window);
         move_window(foreground_window, windows_rect)

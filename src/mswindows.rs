@@ -217,7 +217,7 @@ pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
     }
 }
 
-pub fn get_pressed_key() -> HotKeyAction {
+pub fn get_pressed_action() -> HotKeyAction {
     let mut message = MSG {
         hwnd: HWND::NULL,
         message: 0,
