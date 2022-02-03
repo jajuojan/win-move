@@ -232,5 +232,5 @@ pub fn get_pressed_key() -> HotKeyAction {
     }
 
     let WPARAM(pressed_key_usize) = message.wParam;
-    HotKeyAction::from_u32(u32::try_from(pressed_key_usize).unwrap())
+    HotKeyAction::from(u32::try_from(pressed_key_usize).unwrap())
 }

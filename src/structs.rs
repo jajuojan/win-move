@@ -57,8 +57,8 @@ pub enum HotKeyAction {
     DecreaseWindowSizeTowardsRightTopHistoryAware = 44,
 }
 
-impl HotKeyAction {
-    pub fn from_u32(value: u32) -> HotKeyAction {
+impl From<u32> for HotKeyAction {
+    fn from(value: u32) -> Self {
         match value {
             1 => HotKeyAction::LeftBottom,
             2 => HotKeyAction::Bottom,
@@ -112,9 +112,6 @@ impl HotKeyAction {
             _ => panic!("Unknown value: {}", value),
         }
     }
-    //pub fn to_u32(&self) -> Option<u32> {
-    //    return 4;
-    //}
 }
 
 // TODO: This requires a better solution once keys are freely selectable in config
