@@ -261,6 +261,15 @@ pub fn minimized_window(foreground_window: HWND) {
     }
 }
 
+pub fn maximize_window(foreground_window: HWND) {
+    unsafe {
+        ShowWindow(
+            foreground_window,
+            SW_SHOWMAXIMIZED,
+        );
+    }
+}
+
 pub fn get_action_from_pressed_key() -> HotKeyAction {
     let mut message = MSG {
         hwnd: HWND::NULL,

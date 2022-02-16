@@ -1,6 +1,6 @@
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
-use crate::mswindows::{minimized_window, restore_window, disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info, get_window_margin, get_window_state, move_window, SelectedWindow};
+use crate::mswindows::{minimized_window, restore_window, disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info, get_window_margin, get_window_state, move_window, SelectedWindow, maximize_window};
 use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
@@ -63,7 +63,7 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
     } else if action == HotKeyAction::MinimizeWindow {
         implement_minimize_action_on_window(foreground_window);
     } else if action == HotKeyAction::MaximizeWindow {
-        println!("TODO: Implement maximize");
+        implement_maximize_action_on_window(foreground_window);
     } else if action == HotKeyAction::MoveWindowToOtherScreen {
         println!("TODO: Implement change screen");
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTop {
@@ -86,5 +86,13 @@ fn implement_minimize_action_on_window(foreground_window: SelectedWindow) {
     match window_state {
         WindowState::Minimized => restore_window(foreground_window.platform_specific_handle),
         _ => minimized_window(foreground_window.platform_specific_handle),
+    }
+}
+
+fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
+    let window_state = get_window_state(foreground_window.platform_specific_handle);
+    match window_state {
+        WindowState::Maximized => restore_window(foreground_window.platform_specific_handle),
+        _ => maximize_window(foreground_window.platform_specific_handle),
     }
 }
