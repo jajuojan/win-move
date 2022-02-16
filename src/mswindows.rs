@@ -1,29 +1,42 @@
-pub mod bindings {
-    windows::include_bindings!();
-}
+use std::convert::TryFrom;
+use std::mem::size_of;
 
-use crate::hotkey_action::HotKeyAction;
-use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use bindings::Windows::Win32::Graphics::Dwm::{
     DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
 };
 use bindings::Windows::Win32::Graphics::Gdi::{
-    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
+    GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MonitorFromWindow, MONITORINFO,
 };
 use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
-use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{RegisterHotKey, HOT_KEY_MODIFIERS};
+use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{HOT_KEY_MODIFIERS, RegisterHotKey};
 use bindings::Windows::Win32::UI::WindowsAndMessaging;
 use bindings::Windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow,
-    SetWindowPlacement, MSG, SHOW_WINDOW_CMD, SW_SHOWNORMAL, WINDOWPLACEMENT,
-    WINDOWPLACEMENT_FLAGS,
+    MSG, SetWindowPlacement, SHOW_WINDOW_CMD, ShowWindow, SW_RESTORE, SW_SHOWMAXIMIZED,
+    SW_SHOWMINIMIZED, SW_SHOWNORMAL, WINDOWPLACEMENT, WINDOWPLACEMENT_FLAGS,
 };
-use std::convert::TryFrom;
-use std::mem::size_of;
 
-// https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement?redirectedfrom=MSDN
-fn get_window_info(foreground_window: HWND) -> WINDOWPLACEMENT {
+use crate::enums::WindowState;
+use crate::hotkey_action::HotKeyAction;
+use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
+
+pub mod bindings {
+    windows::include_bindings!();
+}
+
+pub struct SelectedWindow {
+    pub(crate) platform_specific_handle: HWND,
+}
+
+struct HotkeyMappingWin {
+    action: HotKeyAction,
+    key: u32,
+    modifier: HOT_KEY_MODIFIERS,
+}
+
+// https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement
+fn get_window_internal_info(foreground_window: HWND) -> WINDOWPLACEMENT {
     let mut window_info = WINDOWPLACEMENT {
         length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
         flags: WINDOWPLACEMENT_FLAGS(0),
@@ -45,7 +58,7 @@ fn get_window_info(foreground_window: HWND) -> WINDOWPLACEMENT {
 }
 
 pub fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
-    let mut window_info = get_window_info(foreground_window);
+    let mut window_info = get_window_internal_info(foreground_window);
     window_info.showCmd = SW_SHOWNORMAL;
     unsafe {
         SetWindowPlacement(foreground_window, &window_info);
@@ -78,7 +91,7 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
             &mut r2 as *mut _ as *mut _,
             u32::try_from(size_of::<RECT>()).unwrap(),
         )
-        .is_err()
+            .is_err()
         {
             panic!("Error from DwmGetWindowAttribute");
         }
@@ -91,6 +104,7 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
         bottom: r.bottom - r2.bottom,
     }
 }
+
 pub fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
     let monitor;
     unsafe {
@@ -134,12 +148,6 @@ pub fn get_foreground_window() -> SelectedWindow {
     SelectedWindow {
         platform_specific_handle: foreground_window,
     }
-}
-
-struct HotkeyMappingWin {
-    action: HotKeyAction,
-    key: u32,
-    modifier: HOT_KEY_MODIFIERS,
 }
 
 // TODO: Implement mapping from HotkeyMapping
@@ -235,6 +243,24 @@ pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
     }
 }
 
+pub fn restore_window(foreground_window: HWND) {
+    unsafe {
+        ShowWindow(
+            foreground_window,
+            SW_RESTORE,
+        );
+    }
+}
+
+pub fn minimized_window(foreground_window: HWND) {
+    unsafe {
+        ShowWindow(
+            foreground_window,
+            SW_SHOWMINIMIZED,
+        );
+    }
+}
+
 pub fn get_action_from_pressed_key() -> HotKeyAction {
     let mut message = MSG {
         hwnd: HWND::NULL,
@@ -253,6 +279,12 @@ pub fn get_action_from_pressed_key() -> HotKeyAction {
     HotKeyAction::from(u32::try_from(pressed_key_usize).unwrap())
 }
 
-pub struct SelectedWindow {
-    pub(crate) platform_specific_handle: HWND,
+pub fn get_window_state(foreground_window: HWND) -> WindowState {
+    let window_info = get_window_internal_info(foreground_window);
+    match window_info.showCmd {
+        SW_SHOWNORMAL => WindowState::Normal,
+        SW_SHOWMINIMIZED => WindowState::Minimized,
+        SW_SHOWMAXIMIZED => WindowState::Maximized,
+        _ => WindowState::Other,
+    }
 }

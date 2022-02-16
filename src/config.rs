@@ -1,5 +1,5 @@
+use crate::enums::{HotKeyButton, HotKeyModifier};
 use crate::hotkey_action::HotKeyAction;
-use crate::structs::{HotKeyButton, HotKeyModifier};
 
 // TODO: read config from file
 pub fn get_config_hotkeys() -> [(HotKeyAction, HotKeyButton, HotKeyModifier); 8] {
