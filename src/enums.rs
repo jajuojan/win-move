@@ -1,5 +1,6 @@
 // TODO: This requires a better solution once keys are freely selectable in config
 /// Enums for buttons
+#[derive(Debug)]
 pub enum HotKeyButton {
     VkNumpad1 = 1,
     VkNumpad2 = 2,
@@ -14,6 +15,7 @@ pub enum HotKeyButton {
 }
 
 /// Enums for modifiers
+#[derive(Debug)]
 pub enum HotKeyModifier {
     None = 0,
     ModControl = 1,
