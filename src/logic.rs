@@ -19,8 +19,8 @@ pub fn main_loop() {
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
 // TODO: Test how this works with hidden taskbar
 pub fn calculate_windows_rect(
-    monitor_info: MonitorInfo,
-    window_margin: WindowBorderSize,
+    monitor_info: &MonitorInfo,
+    window_margin: &WindowBorderSize,
     action: HotKeyAction,
 ) -> WindowTarget {
     let left = match action {
@@ -76,7 +76,7 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
 fn implement_move_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
     let monitor_info = get_monitor_info(foreground_window.platform_specific_handle);
     let window_margin = get_window_margin(foreground_window.platform_specific_handle);
-    let target_rect = calculate_windows_rect(monitor_info, window_margin, action);
+    let target_rect = calculate_windows_rect(&monitor_info, &window_margin, action);
     disable_window_snapping(foreground_window.platform_specific_handle);
     move_window(foreground_window.platform_specific_handle, target_rect)
 }
@@ -94,5 +94,40 @@ fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
     match window_state {
         WindowState::Maximized => restore_window(foreground_window.platform_specific_handle),
         _ => maximize_window(foreground_window.platform_specific_handle),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::hotkey_action::HotKeyAction::{MoveWindowToRightBottom, MoveWindowToRightMiddle};
+    use crate::logic::calculate_windows_rect;
+    use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
+
+    #[test]
+    fn size_calc_works() {
+        let border = WindowBorderSize { left: -7, right: 7, top: 0, bottom: 7 };
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1170, x_offset: 0, y_offset: 0 },
+                                          &border, MoveWindowToRightBottom),
+                   WindowTarget { left: 952, top: 585, width: 975, height: 594 });
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1170, x_offset: 0, y_offset: 0 },
+                                          &border, MoveWindowToRightMiddle),
+                   WindowTarget { left: 952, top: 0, width: 975, height: 1179 });
+
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1050, x_offset: -1920, y_offset: 0 },
+                                          &border, MoveWindowToRightBottom),
+                   WindowTarget { left: -968, top: 525, width: 975, height: 534 });
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1050, x_offset: -1920, y_offset: 0 },
+                                          &border, MoveWindowToRightMiddle),
+                   WindowTarget { left: -968, top: 0, width: 975, height: 1059 });
+
+        // TODO: These are currently not working properly
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1280, height: 689, x_offset: 1920, y_offset: 0 },
+                                          &WindowBorderSize { left: -139, right: -607, top: -137, bottom: -534 },
+                                          MoveWindowToRightBottom),
+                   WindowTarget { left: 2420, top: 344, width: 173, height: -190 });
+        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1280, height: 689, x_offset: 1920, y_offset: 0 },
+                                          &WindowBorderSize { left: -260, right: -327, top: -172, bottom: -284 },
+                                          MoveWindowToRightMiddle),
+                   WindowTarget { left: 2299, top: 0, width: 574, height: 405 });
     }
 }
