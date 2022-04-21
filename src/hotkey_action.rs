@@ -1,4 +1,4 @@
-#[derive(Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub enum HotKeyAction {
     // Move window to specified location
     MoveWindowToLeftBottom = 1,
