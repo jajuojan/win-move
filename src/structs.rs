@@ -16,7 +16,7 @@ pub struct MonitorInfo {
     pub y_offset: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct WindowTarget {
     pub left: i32,
     pub top: i32,
