@@ -1,6 +1,10 @@
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
-use crate::mswindows::{minimized_window, restore_window, disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info, get_window_margin, get_window_state, move_window, SelectedWindow, maximize_window};
+use crate::mswindows::{
+    disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info,
+    get_window_margin, get_window_state, maximize_window, minimized_window, move_window,
+    restore_window, SelectedWindow,
+};
 use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 
 pub fn main_loop() {
@@ -105,29 +109,132 @@ mod tests {
 
     #[test]
     fn size_calc_works() {
-        let border = WindowBorderSize { left: -7, right: 7, top: 0, bottom: 7 };
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1170, x_offset: 0, y_offset: 0 },
-                                          &border, MoveWindowToRightBottom),
-                   WindowTarget { left: 952, top: 585, width: 975, height: 594 });
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1170, x_offset: 0, y_offset: 0 },
-                                          &border, MoveWindowToRightMiddle),
-                   WindowTarget { left: 952, top: 0, width: 975, height: 1179 });
+        let border = WindowBorderSize {
+            left: -7,
+            right: 7,
+            top: 0,
+            bottom: 7,
+        };
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1920,
+                    height: 1170,
+                    x_offset: 0,
+                    y_offset: 0
+                },
+                &border,
+                MoveWindowToRightBottom
+            ),
+            WindowTarget {
+                left: 952,
+                top: 585,
+                width: 975,
+                height: 594
+            }
+        );
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1920,
+                    height: 1170,
+                    x_offset: 0,
+                    y_offset: 0
+                },
+                &border,
+                MoveWindowToRightMiddle
+            ),
+            WindowTarget {
+                left: 952,
+                top: 0,
+                width: 975,
+                height: 1179
+            }
+        );
 
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1050, x_offset: -1920, y_offset: 0 },
-                                          &border, MoveWindowToRightBottom),
-                   WindowTarget { left: -968, top: 525, width: 975, height: 534 });
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1920, height: 1050, x_offset: -1920, y_offset: 0 },
-                                          &border, MoveWindowToRightMiddle),
-                   WindowTarget { left: -968, top: 0, width: 975, height: 1059 });
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1920,
+                    height: 1050,
+                    x_offset: -1920,
+                    y_offset: 0
+                },
+                &border,
+                MoveWindowToRightBottom
+            ),
+            WindowTarget {
+                left: -968,
+                top: 525,
+                width: 975,
+                height: 534
+            }
+        );
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1920,
+                    height: 1050,
+                    x_offset: -1920,
+                    y_offset: 0
+                },
+                &border,
+                MoveWindowToRightMiddle
+            ),
+            WindowTarget {
+                left: -968,
+                top: 0,
+                width: 975,
+                height: 1059
+            }
+        );
 
         // TODO: These are currently not working properly
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1280, height: 689, x_offset: 1920, y_offset: 0 },
-                                          &WindowBorderSize { left: -139, right: -607, top: -137, bottom: -534 },
-                                          MoveWindowToRightBottom),
-                   WindowTarget { left: 2420, top: 344, width: 173, height: -190 });
-        assert_eq!(calculate_windows_rect(&MonitorInfo { width: 1280, height: 689, x_offset: 1920, y_offset: 0 },
-                                          &WindowBorderSize { left: -260, right: -327, top: -172, bottom: -284 },
-                                          MoveWindowToRightMiddle),
-                   WindowTarget { left: 2299, top: 0, width: 574, height: 405 });
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1280,
+                    height: 689,
+                    x_offset: 1920,
+                    y_offset: 0
+                },
+                &WindowBorderSize {
+                    left: -139,
+                    right: -607,
+                    top: -137,
+                    bottom: -534
+                },
+                MoveWindowToRightBottom
+            ),
+            WindowTarget {
+                left: 2420,
+                top: 344,
+                width: 173,
+                height: -190
+            }
+        );
+        assert_eq!(
+            calculate_windows_rect(
+                &MonitorInfo {
+                    width: 1280,
+                    height: 689,
+                    x_offset: 1920,
+                    y_offset: 0
+                },
+                &WindowBorderSize {
+                    left: -260,
+                    right: -327,
+                    top: -172,
+                    bottom: -284
+                },
+                MoveWindowToRightMiddle
+            ),
+            WindowTarget {
+                left: 2299,
+                top: 0,
+                width: 574,
+                height: 405
+            }
+        );
     }
 }

@@ -6,14 +6,14 @@ use bindings::Windows::Win32::Graphics::Dwm::{
     DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
 };
 use bindings::Windows::Win32::Graphics::Gdi::{
-    GetMonitorInfoW, MONITOR_DEFAULTTONEAREST, MonitorFromWindow, MONITORINFO,
+    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
 };
 use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
-use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{HOT_KEY_MODIFIERS, RegisterHotKey};
+use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{RegisterHotKey, HOT_KEY_MODIFIERS};
 use bindings::Windows::Win32::UI::WindowsAndMessaging;
 use bindings::Windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow,
-    MSG, SetWindowPlacement, SHOW_WINDOW_CMD, ShowWindow, SW_RESTORE, SW_SHOWMAXIMIZED,
+    SetWindowPlacement, ShowWindow, MSG, SHOW_WINDOW_CMD, SW_RESTORE, SW_SHOWMAXIMIZED,
     SW_SHOWMINIMIZED, SW_SHOWNORMAL, WINDOWPLACEMENT, WINDOWPLACEMENT_FLAGS,
 };
 
@@ -91,7 +91,7 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
             &mut r2 as *mut _ as *mut _,
             u32::try_from(size_of::<RECT>()).unwrap(),
         )
-            .is_err()
+        .is_err()
         {
             panic!("Error from DwmGetWindowAttribute");
         }
@@ -245,28 +245,19 @@ pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
 
 pub fn restore_window(foreground_window: HWND) {
     unsafe {
-        ShowWindow(
-            foreground_window,
-            SW_RESTORE,
-        );
+        ShowWindow(foreground_window, SW_RESTORE);
     }
 }
 
 pub fn minimized_window(foreground_window: HWND) {
     unsafe {
-        ShowWindow(
-            foreground_window,
-            SW_SHOWMINIMIZED,
-        );
+        ShowWindow(foreground_window, SW_SHOWMINIMIZED);
     }
 }
 
 pub fn maximize_window(foreground_window: HWND) {
     unsafe {
-        ShowWindow(
-            foreground_window,
-            SW_SHOWMAXIMIZED,
-        );
+        ShowWindow(foreground_window, SW_SHOWMAXIMIZED);
     }
 }
 
