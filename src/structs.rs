@@ -14,14 +14,23 @@ pub struct MonitorInfo {
     pub height: i32,
     pub x_offset: i32,
     pub y_offset: i32,
+    pub platform_specific_handle: isize,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct WindowTarget {
+pub struct WindowPosition {
     pub left: i32,
     pub top: i32,
     pub width: i32,
     pub height: i32,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct WindowRect {
+    pub left: i32,
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
 }
 
 #[allow(dead_code)]

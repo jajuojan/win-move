@@ -13,7 +13,10 @@ pub enum HotKeyAction {
     // Misc actions
     MinimizeWindow = 2001,
     MaximizeWindow = 2002,
-    MoveWindowToOtherScreen = 2003,
+    MoveWindowToLeftScreen = 2003,
+    MoveWindowToRightScreen = 2004,
+    MoveWindowToLeftScreenContinuous = 2005,
+    MoveWindowToRightScreenContinuous = 2006,
 
     // Increase window size
     IncreaseWindowSizeTowardsLeftBottom = 3001,
@@ -71,7 +74,10 @@ impl From<u32> for HotKeyAction {
 
             2001 => HotKeyAction::MinimizeWindow,
             2002 => HotKeyAction::MaximizeWindow,
-            2003 => HotKeyAction::MoveWindowToOtherScreen,
+            2003 => HotKeyAction::MoveWindowToLeftScreen,
+            2004 => HotKeyAction::MoveWindowToRightScreen,
+            2005 => HotKeyAction::MoveWindowToLeftScreenContinuous,
+            2006 => HotKeyAction::MoveWindowToRightScreenContinuous,
 
             3001 => HotKeyAction::IncreaseWindowSizeTowardsLeftBottom,
             3002 => HotKeyAction::IncreaseWindowSizeTowardsBottom,
