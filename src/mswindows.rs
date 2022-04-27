@@ -1,8 +1,13 @@
+use core::ptr;
 use std::convert::TryFrom;
 use std::mem::size_of;
 
+use windows::Win32::Foundation::BOOL;
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
+use windows::Win32::Graphics::Gdi::EnumDisplayMonitors;
+use windows::Win32::Graphics::Gdi::HDC;
+use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
 };
@@ -16,7 +21,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
-use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition, WindowRect};
 
 pub struct SelectedWindow {
     pub(crate) platform_specific_handle: HWND,
@@ -36,12 +41,7 @@ fn get_window_internal_info(foreground_window: HWND) -> WINDOWPLACEMENT {
         showCmd: SHOW_WINDOW_CMD(0),
         ptMinPosition: POINT { x: 0, y: 0 },
         ptMaxPosition: POINT { x: 0, y: 0 },
-        rcNormalPosition: RECT {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-        },
+        rcNormalPosition: get_rect_struct(),
     };
 
     unsafe {
@@ -59,23 +59,23 @@ pub fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
     window_info
 }
 
-pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
-    let mut r = RECT {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-    };
-    let mut r2 = RECT {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-    };
-
+pub fn get_window_rect(foreground_window: HWND) -> WindowRect {
+    let mut r = get_rect_struct();
     unsafe {
         GetWindowRect(foreground_window, &mut r);
+    }
+    into_window_rect(&r)
+}
 
+pub fn get_window_position(foreground_window: HWND) -> WindowPosition {
+    let r = get_window_rect(foreground_window);
+    into_window_position(&r)
+}
+
+pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
+    let mut r2 = get_rect_struct();
+
+    unsafe {
         if DwmGetWindowAttribute(
             foreground_window,
             DWMWA_EXTENDED_FRAME_BOUNDS,
@@ -88,6 +88,7 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
         }
     };
 
+    let r = get_window_rect(foreground_window);
     WindowBorderSize {
         left: r.left - r2.left,
         right: r.right - r2.right,
@@ -96,39 +97,18 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
     }
 }
 
-pub fn get_monitor_info(foreground_window: HWND) -> MonitorInfo {
+pub fn get_current_monitor(foreground_window: HWND) -> MonitorInfo {
     let monitor;
     unsafe {
         monitor = MonitorFromWindow(foreground_window, MONITOR_DEFAULTTONEAREST);
     }
 
-    let mut monitor_info = MONITORINFO {
-        cbSize: u32::try_from(size_of::<MONITORINFO>()).unwrap(),
-        rcMonitor: RECT {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-        },
-        rcWork: RECT {
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-        },
-        dwFlags: 0,
-    };
-
+    let mut monitor_info = get_monitor_info_struct();
     unsafe {
         GetMonitorInfoW(monitor, &mut monitor_info);
     }
 
-    MonitorInfo {
-        width: monitor_info.rcWork.right - monitor_info.rcWork.left,
-        height: monitor_info.rcWork.bottom - monitor_info.rcWork.top,
-        x_offset: monitor_info.rcWork.left,
-        y_offset: monitor_info.rcWork.top,
-    }
+    into_monitor_info(&monitor_info, &monitor)
 }
 
 pub fn get_foreground_window() -> SelectedWindow {
@@ -186,7 +166,7 @@ fn map_keys() -> Vec<HotkeyMappingWin> {
             modifier,
         },
         HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToOtherScreen,
+            action: HotKeyAction::MoveWindowToLeftScreenContinuous,
             key: KeyboardAndMouse::VK_NUMPAD0,
             modifier,
         },
@@ -222,7 +202,7 @@ pub fn register_hotkeys() {
     do_register_hotkeys(hot_keys);
 }
 
-pub fn move_window(foreground_window: HWND, windows_rect: WindowTarget) {
+pub fn move_window(foreground_window: HWND, windows_rect: WindowPosition) {
     unsafe {
         MoveWindow(
             foreground_window,
@@ -278,5 +258,85 @@ pub fn get_window_state(foreground_window: HWND) -> WindowState {
         SW_SHOWMINIMIZED => WindowState::Minimized,
         SW_SHOWMAXIMIZED => WindowState::Maximized,
         _ => WindowState::Other,
+    }
+}
+
+unsafe extern "system" fn monitor_enum_fn(
+    param0: HMONITOR,
+    _param1: HDC,
+    _param2: *mut RECT,
+    _param3: LPARAM,
+) -> BOOL {
+    let _param3 = Box::leak(Box::from_raw(_param3.0 as *mut Vec<HMONITOR>));
+    _param3.push(param0);
+    BOOL::from(true)
+}
+
+// TODO: add info on which monitor has the current window
+//       or at least the HMONITOR for identifying
+pub fn get_all_monitors() -> Vec<MonitorInfo> {
+    let mut monitor_infos = vec![];
+    unsafe {
+        let monitors_pointer = Box::into_raw(Box::new(Vec::<HMONITOR>::new()));
+        let _res_bool = EnumDisplayMonitors(
+            HDC(0),
+            ptr::null_mut(),
+            Some(monitor_enum_fn),
+            LPARAM(monitors_pointer as isize),
+        );
+        let monitors = Box::from_raw(monitors_pointer);
+
+        for monitor in *monitors {
+            let mut monitor_info = get_monitor_info_struct();
+            GetMonitorInfoW(monitor, &mut monitor_info);
+            monitor_infos.push(into_monitor_info(&monitor_info, &monitor));
+        }
+    }
+    monitor_infos
+}
+
+fn into_monitor_info(win_monitor_info: &MONITORINFO, win_monitor: &HMONITOR) -> MonitorInfo {
+    MonitorInfo {
+        width: win_monitor_info.rcWork.right - win_monitor_info.rcWork.left,
+        height: win_monitor_info.rcWork.bottom - win_monitor_info.rcWork.top,
+        x_offset: win_monitor_info.rcWork.left,
+        y_offset: win_monitor_info.rcWork.top,
+        platform_specific_handle: win_monitor.0,
+    }
+}
+
+fn get_monitor_info_struct() -> MONITORINFO {
+    MONITORINFO {
+        cbSize: u32::try_from(size_of::<MONITORINFO>()).unwrap(),
+        rcMonitor: get_rect_struct(),
+        rcWork: get_rect_struct(),
+        dwFlags: 0,
+    }
+}
+
+fn get_rect_struct() -> RECT {
+    RECT {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    }
+}
+
+fn into_window_rect(r: &RECT) -> WindowRect {
+    WindowRect {
+        left: r.left,
+        top: r.top,
+        right: r.right,
+        bottom: r.bottom,
+    }
+}
+
+fn into_window_position(r: &WindowRect) -> WindowPosition {
+    WindowPosition {
+        left: r.left,
+        top: r.top,
+        width: r.right - r.left,
+        height: r.bottom - r.top,
     }
 }

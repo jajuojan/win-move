@@ -1,11 +1,11 @@
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
 use crate::mswindows::{
-    disable_window_snapping, get_action_from_pressed_key, get_foreground_window, get_monitor_info,
-    get_window_margin, get_window_state, maximize_window, minimized_window, move_window,
-    restore_window, SelectedWindow,
+    disable_window_snapping, get_action_from_pressed_key, get_all_monitors, get_current_monitor,
+    get_foreground_window, get_window_margin, get_window_position, get_window_state,
+    maximize_window, minimized_window, move_window, restore_window, SelectedWindow,
 };
-use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
+use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition};
 
 pub fn main_loop() {
     loop {
@@ -25,7 +25,7 @@ pub fn calculate_windows_rect(
     monitor_info: &MonitorInfo,
     window_margin: &WindowBorderSize,
     action: HotKeyAction,
-) -> WindowTarget {
+) -> WindowPosition {
     let left = match action {
         HotKeyAction::MoveWindowToRightBottom
         | HotKeyAction::MoveWindowToRightMiddle
@@ -52,7 +52,7 @@ pub fn calculate_windows_rect(
         _ => monitor_info.height / 2,
     };
 
-    WindowTarget {
+    WindowPosition {
         left: left + window_margin.left,
         top,
         width: width + window_margin.right - window_margin.left,
@@ -67,8 +67,8 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
         implement_minimize_action_on_window(foreground_window);
     } else if action == HotKeyAction::MaximizeWindow {
         implement_maximize_action_on_window(foreground_window);
-    } else if action == HotKeyAction::MoveWindowToOtherScreen {
-        println!("TODO: Implement change screen");
+    } else if action <= HotKeyAction::MoveWindowToRightScreenContinuous {
+        implement_move_action_to_another_screen(foreground_window, action);
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTop {
         println!("TODO: Implement window resize");
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTopHistoryAware {
@@ -76,11 +76,14 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
     }
 }
 
+// TODO: Change the commented printLns into log.debugs where apropriate
 fn implement_move_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
-    let monitor_info = get_monitor_info(foreground_window.platform_specific_handle);
+    let monitor_info = get_current_monitor(foreground_window.platform_specific_handle);
+    //println!("{:?} {:?}", monitor_info, action);
     let window_margin = get_window_margin(foreground_window.platform_specific_handle);
     let target_rect = calculate_windows_rect(&monitor_info, &window_margin, action);
     disable_window_snapping(foreground_window.platform_specific_handle);
+    //println!("implement_move_action_on_window: {:?}", target_rect);
     move_window(foreground_window.platform_specific_handle, target_rect)
 }
 
@@ -100,11 +103,76 @@ fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
     }
 }
 
+// TODO: Still requires some tweaking in values
+// TODO: Possibly use min percentage limit to connect to screen edges. Cheating, but outcome might be what we want
+// TODO: For maximized, -> restore -> move to other monitor -> maximize
+// TODO: Change the commented printLns into log.debugs where apropriate
+fn implement_move_action_to_another_screen(
+    foreground_window: SelectedWindow,
+    _action: HotKeyAction,
+) {
+    let mut all_monitors = get_all_monitors();
+    if all_monitors.len() == 1 {
+        return;
+    }
+
+    all_monitors.sort_by(|a, b| a.x_offset.cmp(&b.x_offset));
+    //println!("{:?}", all_monitors);
+    let current_monitor = get_current_monitor(foreground_window.platform_specific_handle);
+
+    let mut index = 0;
+    let mut found_index: i32 = -1;
+    for m in &all_monitors {
+        if current_monitor.platform_specific_handle == m.platform_specific_handle {
+            found_index = index;
+            break;
+        }
+        index = index + 1;
+    }
+
+    let target_index: usize = (if found_index == 0 {
+        all_monitors.len() as i32 - 1
+    } else {
+        found_index - 1
+    }) as usize;
+    let target_monitor = &all_monitors[target_index];
+    let window_rect = get_window_position(foreground_window.platform_specific_handle);
+
+    //println!("{:?}", current_monitor);
+    //println!("{:?}", target_monitor);
+    //println!("{:?}", window_rect);
+
+    let ratio_left: f32 = ((window_rect.left - current_monitor.x_offset) as f32
+        / (current_monitor.width) as f32)
+        .abs();
+    let ratio_top: f32 = ((window_rect.top - current_monitor.y_offset) as f32
+        / (current_monitor.height) as f32)
+        .abs();
+    let ratio_width: f32 = (window_rect.width as f32 / current_monitor.width as f32).abs();
+    let ratio_height: f32 = (window_rect.height as f32 / current_monitor.height as f32).abs();
+    //println!("RATIO {:?} {:?} {:?} {:?}", ratio_left, ratio_top, ratio_width, ratio_height);
+
+    let new_left = (ratio_left * target_monitor.width as f32) as i32 + target_monitor.x_offset;
+    let new_top = (ratio_top * target_monitor.height as f32) as i32 + target_monitor.y_offset;
+    let new_width = (ratio_width * target_monitor.width as f32) as i32;
+    let new_height = (ratio_height * target_monitor.height as f32) as i32;
+    //println!("NEW {:?} {:?} {:?} {:?}", new_left, new_top, new_width, new_height);
+
+    let target_rect = WindowPosition {
+        left: new_left,
+        top: new_top,
+        width: new_width,
+        height: new_height,
+    };
+    //println!("implement_move_action_to_another_screen: {:?}", target_rect);
+    move_window(foreground_window.platform_specific_handle, target_rect)
+}
+
 #[cfg(test)]
 mod tests {
     use crate::hotkey_action::HotKeyAction::{MoveWindowToRightBottom, MoveWindowToRightMiddle};
     use crate::logic::calculate_windows_rect;
-    use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
+    use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition};
 
     #[test]
     fn size_calc_works() {
@@ -120,16 +188,17 @@ mod tests {
                     width: 1920,
                     height: 1170,
                     x_offset: 0,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &border,
-                MoveWindowToRightBottom
+                MoveWindowToRightBottom,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: 952,
                 top: 585,
                 width: 975,
-                height: 594
+                height: 594,
             }
         );
         assert_eq!(
@@ -138,16 +207,17 @@ mod tests {
                     width: 1920,
                     height: 1170,
                     x_offset: 0,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &border,
-                MoveWindowToRightMiddle
+                MoveWindowToRightMiddle,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: 952,
                 top: 0,
                 width: 975,
-                height: 1179
+                height: 1179,
             }
         );
 
@@ -157,16 +227,17 @@ mod tests {
                     width: 1920,
                     height: 1050,
                     x_offset: -1920,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &border,
-                MoveWindowToRightBottom
+                MoveWindowToRightBottom,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: -968,
                 top: 525,
                 width: 975,
-                height: 534
+                height: 534,
             }
         );
         assert_eq!(
@@ -175,16 +246,17 @@ mod tests {
                     width: 1920,
                     height: 1050,
                     x_offset: -1920,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &border,
-                MoveWindowToRightMiddle
+                MoveWindowToRightMiddle,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: -968,
                 top: 0,
                 width: 975,
-                height: 1059
+                height: 1059,
             }
         );
 
@@ -195,21 +267,22 @@ mod tests {
                     width: 1280,
                     height: 689,
                     x_offset: 1920,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &WindowBorderSize {
                     left: -139,
                     right: -607,
                     top: -137,
-                    bottom: -534
+                    bottom: -534,
                 },
-                MoveWindowToRightBottom
+                MoveWindowToRightBottom,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: 2420,
                 top: 344,
                 width: 173,
-                height: -190
+                height: -190,
             }
         );
         assert_eq!(
@@ -218,21 +291,22 @@ mod tests {
                     width: 1280,
                     height: 689,
                     x_offset: 1920,
-                    y_offset: 0
+                    y_offset: 0,
+                    platform_specific_handle: -1
                 },
                 &WindowBorderSize {
                     left: -260,
                     right: -327,
                     top: -172,
-                    bottom: -284
+                    bottom: -284,
                 },
-                MoveWindowToRightMiddle
+                MoveWindowToRightMiddle,
             ),
-            WindowTarget {
+            WindowPosition {
                 left: 2299,
                 top: 0,
                 width: 574,
-                height: 405
+                height: 405,
             }
         );
     }
