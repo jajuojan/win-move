@@ -21,7 +21,6 @@ pub fn main_loop() {
 // Take this into account as well (currently +2px in height)
 // TODO: Split the compensation of vertical border between top/bottom windows
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
-// TODO: Test how this works with hidden taskbar
 pub fn calculate_windows_rect(
     monitor_info: &MonitorInfo,
     window_margin: &WindowBorderSize,
