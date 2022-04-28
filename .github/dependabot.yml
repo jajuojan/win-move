@@ -11,6 +11,10 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
+    labels:
+      - "dependencies"
+      - "github_actions"
+      - "bot"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -18,3 +22,7 @@ updates:
       interval: "weekly"
     commit-message:
       prefix: "chore"
+    labels:
+      - "dependencies"
+      - "github_actions"
+      - "bot"
