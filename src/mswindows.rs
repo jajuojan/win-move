@@ -1,17 +1,14 @@
 use std::convert::TryFrom;
 use std::mem::size_of;
 
-use bindings::Windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
-use bindings::Windows::Win32::Graphics::Dwm::{
-    DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS, DWMWINDOWATTRIBUTE,
-};
-use bindings::Windows::Win32::Graphics::Gdi::{
+use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
+use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
+use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
 };
-use bindings::Windows::Win32::UI::KeyboardAndMouseInput;
-use bindings::Windows::Win32::UI::KeyboardAndMouseInput::{RegisterHotKey, HOT_KEY_MODIFIERS};
-use bindings::Windows::Win32::UI::WindowsAndMessaging;
-use bindings::Windows::Win32::UI::WindowsAndMessaging::{
+use windows::Win32::UI::Input::KeyboardAndMouse;
+use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
+use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetMessageW, GetWindowPlacement, GetWindowRect, MoveWindow,
     SetWindowPlacement, ShowWindow, MSG, SHOW_WINDOW_CMD, SW_RESTORE, SW_SHOWMAXIMIZED,
     SW_SHOWMINIMIZED, SW_SHOWNORMAL, WINDOWPLACEMENT, WINDOWPLACEMENT_FLAGS,
@@ -21,17 +18,13 @@ use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
 use crate::structs::{MonitorInfo, WindowBorderSize, WindowTarget};
 
-pub mod bindings {
-    windows::include_bindings!();
-}
-
 pub struct SelectedWindow {
     pub(crate) platform_specific_handle: HWND,
 }
 
 struct HotkeyMappingWin {
     action: HotKeyAction,
-    key: u32,
+    key: VIRTUAL_KEY,
     modifier: HOT_KEY_MODIFIERS,
 }
 
@@ -80,14 +73,12 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
         bottom: 0,
     };
 
-    let DWMWINDOWATTRIBUTE(extended_frame_bounds) = DWMWA_EXTENDED_FRAME_BOUNDS;
-
     unsafe {
         GetWindowRect(foreground_window, &mut r);
 
         if DwmGetWindowAttribute(
             foreground_window,
-            u32::try_from(extended_frame_bounds).unwrap(),
+            DWMWA_EXTENDED_FRAME_BOUNDS,
             &mut r2 as *mut _ as *mut _,
             u32::try_from(size_of::<RECT>()).unwrap(),
         )
@@ -152,61 +143,61 @@ pub fn get_foreground_window() -> SelectedWindow {
 
 // TODO: Implement mapping from HotkeyMapping
 fn map_keys() -> Vec<HotkeyMappingWin> {
-    let modifier = KeyboardAndMouseInput::MOD_CONTROL;
+    let modifier = KeyboardAndMouse::MOD_CONTROL;
     vec![
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToLeftBottom,
-            key: WindowsAndMessaging::VK_NUMPAD1,
+            key: KeyboardAndMouse::VK_NUMPAD1,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToBottom,
-            key: WindowsAndMessaging::VK_NUMPAD2,
+            key: KeyboardAndMouse::VK_NUMPAD2,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToRightBottom,
-            key: WindowsAndMessaging::VK_NUMPAD3,
+            key: KeyboardAndMouse::VK_NUMPAD3,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToLeftMiddle,
-            key: WindowsAndMessaging::VK_NUMPAD4,
+            key: KeyboardAndMouse::VK_NUMPAD4,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToRightMiddle,
-            key: WindowsAndMessaging::VK_NUMPAD6,
+            key: KeyboardAndMouse::VK_NUMPAD6,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToLeftTop,
-            key: WindowsAndMessaging::VK_NUMPAD7,
+            key: KeyboardAndMouse::VK_NUMPAD7,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToTop,
-            key: WindowsAndMessaging::VK_NUMPAD8,
+            key: KeyboardAndMouse::VK_NUMPAD8,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToRightTop,
-            key: WindowsAndMessaging::VK_NUMPAD9,
+            key: KeyboardAndMouse::VK_NUMPAD9,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MoveWindowToOtherScreen,
-            key: WindowsAndMessaging::VK_NUMPAD0,
+            key: KeyboardAndMouse::VK_NUMPAD0,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MinimizeWindow,
-            key: WindowsAndMessaging::VK_DECIMAL,
+            key: KeyboardAndMouse::VK_DECIMAL,
             modifier,
         },
         HotkeyMappingWin {
             action: HotKeyAction::MaximizeWindow,
-            key: WindowsAndMessaging::VK_NUMPAD5,
+            key: KeyboardAndMouse::VK_NUMPAD5,
             modifier,
         },
     ]
@@ -214,12 +205,13 @@ fn map_keys() -> Vec<HotkeyMappingWin> {
 
 fn do_register_hotkeys(hot_keys: Vec<HotkeyMappingWin>) {
     for hot_key in hot_keys.iter() {
+        let VIRTUAL_KEY(key_usize) = hot_key.key;
         unsafe {
             RegisterHotKey(
-                HWND::NULL,
+                HWND(0),
                 hot_key.action as i32,
                 hot_key.modifier,
-                hot_key.key,
+                key_usize.into(),
             );
         }
     }
@@ -263,7 +255,7 @@ pub fn maximize_window(foreground_window: HWND) {
 
 pub fn get_action_from_pressed_key() -> HotKeyAction {
     let mut message = MSG {
-        hwnd: HWND::NULL,
+        hwnd: HWND(0),
         message: 0,
         wParam: WPARAM(0),
         lParam: LPARAM(0),
@@ -272,7 +264,7 @@ pub fn get_action_from_pressed_key() -> HotKeyAction {
     };
 
     unsafe {
-        let _message_return = GetMessageW(&mut message, HWND::NULL, 0, 0);
+        let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
     }
 
     let WPARAM(pressed_key_usize) = message.wParam;

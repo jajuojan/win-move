@@ -3,8 +3,16 @@ name = "win-move"
 version = "0.1.1"
 edition = "2018"
 
-[dependencies]
-windows = "0.36.1"
+[dependencies.windows]
+version = "0.36.1"
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input",
+    "Win32_UI_Input_KeyboardAndMouse"
+]
 
 [target.'cfg(windows)'.build-dependencies]
 windows = "0.36.1"
