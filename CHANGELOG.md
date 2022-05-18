@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/jajuojan/win-move/compare/v0.1.1...v0.2.0) (2022-05-18)
+
+
+### Features
+
+* [#3](https://github.com/jajuojan/win-move/issues/3) Add support for window maximize ([8b086af](https://github.com/jajuojan/win-move/commit/8b086af5d5f184583917611e801f44015c374f12))
+* [#4](https://github.com/jajuojan/win-move/issues/4) Add support for window minimize ([3479ab0](https://github.com/jajuojan/win-move/commit/3479ab029ac886f1dbc1e90d3af51a6b426ac933))
+* [#5](https://github.com/jajuojan/win-move/issues/5) Add support for switching between screens ([25c971d](https://github.com/jajuojan/win-move/commit/25c971dadb4c6c706b49b6ef6b7ffb8f4649adbe))
+
+
+### Bug Fixes
+
+* [#44](https://github.com/jajuojan/win-move/issues/44) Add application manifest with DPI awareness ([a66c403](https://github.com/jajuojan/win-move/commit/a66c403eb5cc3722a40fe7f34d7d364d2d253694))
+
 ### [0.1.1](https://www.github.com/jajuojan/win-move/compare/v0.1.0...v0.1.1) (2022-02-02)
 
 
