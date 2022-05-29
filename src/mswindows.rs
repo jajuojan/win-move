@@ -11,6 +11,7 @@ use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::Graphics::Gdi::{
     GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
 };
+use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
 use windows::Win32::UI::Input::KeyboardAndMouse;
 use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
 use windows::Win32::UI::WindowsAndMessaging::{
@@ -21,7 +22,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
-use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition, WindowRect};
+use crate::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition, WindowRect};
 
 pub struct SelectedWindow {
     pub(crate) platform_specific_handle: HWND,
@@ -108,7 +109,8 @@ pub fn get_current_monitor(foreground_window: HWND) -> MonitorInfo {
         GetMonitorInfoW(monitor, &mut monitor_info);
     }
 
-    into_monitor_info(&monitor_info, &monitor)
+    let dpi = get_monitor_dpi(&monitor);
+    into_monitor_info(&monitor_info, &monitor, &dpi)
 }
 
 pub fn get_foreground_window() -> SelectedWindow {
@@ -202,7 +204,7 @@ pub fn register_hotkeys() {
     do_register_hotkeys(hot_keys);
 }
 
-pub fn move_window(foreground_window: HWND, windows_rect: WindowPosition) {
+pub fn move_window(foreground_window: HWND, windows_rect: &WindowPosition) {
     unsafe {
         MoveWindow(
             foreground_window,
@@ -272,6 +274,20 @@ unsafe extern "system" fn monitor_enum_fn(
     BOOL::from(true)
 }
 
+pub fn get_monitor_dpi(hmonitor: &HMONITOR) -> DpiInfo {
+    let mut dpi_x: Box<u32> = Box::new(0);
+    let mut dpi_y: Box<u32> = Box::new(0);
+    unsafe {
+        // Ignore error from GetDpiForMonitor
+        if let Ok(_res) = GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &mut *dpi_x, &mut *dpi_y) {
+        };
+    }
+    DpiInfo {
+        x: *dpi_x,
+        y: *dpi_y,
+    }
+}
+
 // TODO: add info on which monitor has the current window
 //       or at least the HMONITOR for identifying
 pub fn get_all_monitors() -> Vec<MonitorInfo> {
@@ -289,19 +305,25 @@ pub fn get_all_monitors() -> Vec<MonitorInfo> {
         for monitor in *monitors {
             let mut monitor_info = get_monitor_info_struct();
             GetMonitorInfoW(monitor, &mut monitor_info);
-            monitor_infos.push(into_monitor_info(&monitor_info, &monitor));
+            let dpi = get_monitor_dpi(&monitor);
+            monitor_infos.push(into_monitor_info(&monitor_info, &monitor, &dpi));
         }
     }
     monitor_infos
 }
 
-fn into_monitor_info(win_monitor_info: &MONITORINFO, win_monitor: &HMONITOR) -> MonitorInfo {
+fn into_monitor_info(
+    win_monitor_info: &MONITORINFO,
+    win_monitor: &HMONITOR,
+    dpi: &DpiInfo,
+) -> MonitorInfo {
     MonitorInfo {
         width: win_monitor_info.rcWork.right - win_monitor_info.rcWork.left,
         height: win_monitor_info.rcWork.bottom - win_monitor_info.rcWork.top,
         x_offset: win_monitor_info.rcWork.left,
         y_offset: win_monitor_info.rcWork.top,
         platform_specific_handle: win_monitor.0,
+        dpi: *dpi,
     }
 }
 

@@ -8,6 +8,12 @@ pub struct HotkeyMapping {
     pub modifier: HotKeyModifier,
 }
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct DpiInfo {
+    pub x: u32,
+    pub y: u32,
+}
+
 #[derive(Debug)]
 pub struct MonitorInfo {
     pub width: i32,
@@ -15,6 +21,7 @@ pub struct MonitorInfo {
     pub x_offset: i32,
     pub y_offset: i32,
     pub platform_specific_handle: isize,
+    pub dpi: DpiInfo,
 }
 
 #[derive(Debug, PartialEq)]
