@@ -84,7 +84,7 @@ fn implement_move_action_on_window(foreground_window: SelectedWindow, action: Ho
     let target_rect = calculate_windows_rect(&monitor_info, &window_margin, action);
     disable_window_snapping(foreground_window.platform_specific_handle);
     //println!("implement_move_action_on_window: {:?}", target_rect);
-    move_window(foreground_window.platform_specific_handle, target_rect)
+    move_window(foreground_window.platform_specific_handle, &target_rect)
 }
 
 fn implement_minimize_action_on_window(foreground_window: SelectedWindow) {
@@ -117,7 +117,6 @@ fn implement_move_action_to_another_screen(
     }
 
     all_monitors.sort_by(|a, b| a.x_offset.cmp(&b.x_offset));
-    //println!("{:?}", all_monitors);
     let current_monitor = get_current_monitor(foreground_window.platform_specific_handle);
 
     let mut index = 0;
@@ -138,10 +137,6 @@ fn implement_move_action_to_another_screen(
     let target_monitor = &all_monitors[target_index];
     let window_rect = get_window_position(foreground_window.platform_specific_handle);
 
-    //println!("{:?}", current_monitor);
-    //println!("{:?}", target_monitor);
-    //println!("{:?}", window_rect);
-
     let ratio_left: f32 = ((window_rect.left - current_monitor.x_offset) as f32
         / (current_monitor.width) as f32)
         .abs();
@@ -150,13 +145,11 @@ fn implement_move_action_to_another_screen(
         .abs();
     let ratio_width: f32 = (window_rect.width as f32 / current_monitor.width as f32).abs();
     let ratio_height: f32 = (window_rect.height as f32 / current_monitor.height as f32).abs();
-    //println!("RATIO {:?} {:?} {:?} {:?}", ratio_left, ratio_top, ratio_width, ratio_height);
 
     let new_left = (ratio_left * target_monitor.width as f32) as i32 + target_monitor.x_offset;
     let new_top = (ratio_top * target_monitor.height as f32) as i32 + target_monitor.y_offset;
     let new_width = (ratio_width * target_monitor.width as f32) as i32;
     let new_height = (ratio_height * target_monitor.height as f32) as i32;
-    //println!("NEW {:?} {:?} {:?} {:?}", new_left, new_top, new_width, new_height);
 
     let target_rect = WindowPosition {
         left: new_left,
@@ -165,14 +158,20 @@ fn implement_move_action_to_another_screen(
         height: new_height,
     };
     //println!("implement_move_action_to_another_screen: {:?}", target_rect);
-    move_window(foreground_window.platform_specific_handle, target_rect)
+    move_window(foreground_window.platform_specific_handle, &target_rect);
+
+    // Moving between monitors with diffrent DPI seems to result in different windows sizes in some cases.
+    // Issuing the move command again is used as a workaround
+    if target_monitor.dpi != current_monitor.dpi {
+        move_window(foreground_window.platform_specific_handle, &target_rect);
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::hotkey_action::HotKeyAction::{MoveWindowToRightBottom, MoveWindowToRightMiddle};
     use crate::logic::calculate_windows_rect;
-    use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition};
+    use crate::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition};
 
     #[test]
     fn size_calc_works() {
@@ -189,7 +188,8 @@ mod tests {
                     height: 1170,
                     x_offset: 0,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &border,
                 MoveWindowToRightBottom,
@@ -208,7 +208,8 @@ mod tests {
                     height: 1170,
                     x_offset: 0,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &border,
                 MoveWindowToRightMiddle,
@@ -228,7 +229,8 @@ mod tests {
                     height: 1050,
                     x_offset: -1920,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &border,
                 MoveWindowToRightBottom,
@@ -247,7 +249,8 @@ mod tests {
                     height: 1050,
                     x_offset: -1920,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &border,
                 MoveWindowToRightMiddle,
@@ -268,7 +271,8 @@ mod tests {
                     height: 689,
                     x_offset: 1920,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &WindowBorderSize {
                     left: -139,
@@ -292,7 +296,8 @@ mod tests {
                     height: 689,
                     x_offset: 1920,
                     y_offset: 0,
-                    platform_specific_handle: -1
+                    platform_specific_handle: -1,
+                    dpi: DpiInfo { x: 0, y: 0 }
                 },
                 &WindowBorderSize {
                     left: -260,
