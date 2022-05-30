@@ -22,10 +22,14 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 use crate::enums::WindowState;
 use crate::hotkey_action::HotKeyAction;
-use crate::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition, WindowRect};
+use crate::structs::{
+    DpiInfo, MonitorInfo, SelectedWindow, WindowBorderSize, WindowPosition, WindowRect,
+};
 
-pub struct SelectedWindow {
-    pub(crate) platform_specific_handle: HWND,
+impl SelectedWindow {
+    pub fn get_platform_specific_handle(&self) -> HWND {
+        HWND(self.platform_specific_handle)
+    }
 }
 
 struct HotkeyMappingWin {
@@ -51,34 +55,38 @@ fn get_window_internal_info(foreground_window: HWND) -> WINDOWPLACEMENT {
     window_info
 }
 
-pub fn disable_window_snapping(foreground_window: HWND) -> WINDOWPLACEMENT {
-    let mut window_info = get_window_internal_info(foreground_window);
+pub fn disable_window_snapping(foreground_window: &SelectedWindow) -> WINDOWPLACEMENT {
+    let mut window_info =
+        get_window_internal_info(foreground_window.get_platform_specific_handle());
     window_info.showCmd = SW_SHOWNORMAL;
     unsafe {
-        SetWindowPlacement(foreground_window, &window_info);
+        SetWindowPlacement(
+            foreground_window.get_platform_specific_handle(),
+            &window_info,
+        );
     }
     window_info
 }
 
-pub fn get_window_rect(foreground_window: HWND) -> WindowRect {
+pub fn get_window_rect(foreground_window: &SelectedWindow) -> WindowRect {
     let mut r = get_rect_struct();
     unsafe {
-        GetWindowRect(foreground_window, &mut r);
+        GetWindowRect(foreground_window.get_platform_specific_handle(), &mut r);
     }
     into_window_rect(&r)
 }
 
-pub fn get_window_position(foreground_window: HWND) -> WindowPosition {
+pub fn get_window_position(foreground_window: &SelectedWindow) -> WindowPosition {
     let r = get_window_rect(foreground_window);
     into_window_position(&r)
 }
 
-pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
+pub fn get_window_margin(foreground_window: &SelectedWindow) -> WindowBorderSize {
     let mut r2 = get_rect_struct();
 
     unsafe {
         if DwmGetWindowAttribute(
-            foreground_window,
+            foreground_window.get_platform_specific_handle(),
             DWMWA_EXTENDED_FRAME_BOUNDS,
             &mut r2 as *mut _ as *mut _,
             u32::try_from(size_of::<RECT>()).unwrap(),
@@ -98,10 +106,13 @@ pub fn get_window_margin(foreground_window: HWND) -> WindowBorderSize {
     }
 }
 
-pub fn get_current_monitor(foreground_window: HWND) -> MonitorInfo {
+pub fn get_current_monitor(foreground_window: &SelectedWindow) -> MonitorInfo {
     let monitor;
     unsafe {
-        monitor = MonitorFromWindow(foreground_window, MONITOR_DEFAULTTONEAREST);
+        monitor = MonitorFromWindow(
+            foreground_window.get_platform_specific_handle(),
+            MONITOR_DEFAULTTONEAREST,
+        );
     }
 
     let mut monitor_info = get_monitor_info_struct();
@@ -119,7 +130,7 @@ pub fn get_foreground_window() -> SelectedWindow {
         foreground_window = GetForegroundWindow();
     }
     SelectedWindow {
-        platform_specific_handle: foreground_window,
+        platform_specific_handle: foreground_window.0,
     }
 }
 
@@ -204,10 +215,10 @@ pub fn register_hotkeys() {
     do_register_hotkeys(hot_keys);
 }
 
-pub fn move_window(foreground_window: HWND, windows_rect: &WindowPosition) {
+pub fn move_window(foreground_window: &SelectedWindow, windows_rect: &WindowPosition) {
     unsafe {
         MoveWindow(
-            foreground_window,
+            foreground_window.get_platform_specific_handle(),
             windows_rect.left,
             windows_rect.top,
             windows_rect.width,
@@ -217,21 +228,27 @@ pub fn move_window(foreground_window: HWND, windows_rect: &WindowPosition) {
     }
 }
 
-pub fn restore_window(foreground_window: HWND) {
+pub fn restore_window(foreground_window: &SelectedWindow) {
     unsafe {
-        ShowWindow(foreground_window, SW_RESTORE);
+        ShowWindow(foreground_window.get_platform_specific_handle(), SW_RESTORE);
     }
 }
 
-pub fn minimized_window(foreground_window: HWND) {
+pub fn minimized_window(foreground_window: &SelectedWindow) {
     unsafe {
-        ShowWindow(foreground_window, SW_SHOWMINIMIZED);
+        ShowWindow(
+            foreground_window.get_platform_specific_handle(),
+            SW_SHOWMINIMIZED,
+        );
     }
 }
 
-pub fn maximize_window(foreground_window: HWND) {
+pub fn maximize_window(foreground_window: &SelectedWindow) {
     unsafe {
-        ShowWindow(foreground_window, SW_SHOWMAXIMIZED);
+        ShowWindow(
+            foreground_window.get_platform_specific_handle(),
+            SW_SHOWMAXIMIZED,
+        );
     }
 }
 
@@ -253,8 +270,8 @@ pub fn get_action_from_pressed_key() -> HotKeyAction {
     HotKeyAction::from(u32::try_from(pressed_key_usize).unwrap())
 }
 
-pub fn get_window_state(foreground_window: HWND) -> WindowState {
-    let window_info = get_window_internal_info(foreground_window);
+pub fn get_window_state(foreground_window: &SelectedWindow) -> WindowState {
+    let window_info = get_window_internal_info(foreground_window.get_platform_specific_handle());
     match window_info.showCmd {
         SW_SHOWNORMAL => WindowState::Normal,
         SW_SHOWMINIMIZED => WindowState::Minimized,
