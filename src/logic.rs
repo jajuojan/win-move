@@ -3,9 +3,9 @@ use crate::hotkey_action::HotKeyAction;
 use crate::mswindows::{
     disable_window_snapping, get_action_from_pressed_key, get_all_monitors, get_current_monitor,
     get_foreground_window, get_window_margin, get_window_position, get_window_state,
-    maximize_window, minimized_window, move_window, restore_window, SelectedWindow,
+    maximize_window, minimized_window, move_window, restore_window,
 };
-use crate::structs::{MonitorInfo, WindowBorderSize, WindowPosition};
+use crate::structs::{MonitorInfo, SelectedWindow, WindowBorderSize, WindowPosition};
 
 pub fn main_loop() {
     loop {
@@ -78,28 +78,28 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
 
 // TODO: Change the commented printLns into log.debugs where apropriate
 fn implement_move_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
-    let monitor_info = get_current_monitor(foreground_window.platform_specific_handle);
+    let monitor_info = get_current_monitor(&foreground_window);
     //println!("{:?} {:?}", monitor_info, action);
-    let window_margin = get_window_margin(foreground_window.platform_specific_handle);
+    let window_margin = get_window_margin(&foreground_window);
     let target_rect = calculate_windows_rect(&monitor_info, &window_margin, action);
-    disable_window_snapping(foreground_window.platform_specific_handle);
+    disable_window_snapping(&foreground_window);
     //println!("implement_move_action_on_window: {:?}", target_rect);
-    move_window(foreground_window.platform_specific_handle, &target_rect)
+    move_window(&foreground_window, &target_rect)
 }
 
 fn implement_minimize_action_on_window(foreground_window: SelectedWindow) {
-    let window_state = get_window_state(foreground_window.platform_specific_handle);
+    let window_state = get_window_state(&foreground_window);
     match window_state {
-        WindowState::Minimized => restore_window(foreground_window.platform_specific_handle),
-        _ => minimized_window(foreground_window.platform_specific_handle),
+        WindowState::Minimized => restore_window(&foreground_window),
+        _ => minimized_window(&foreground_window),
     }
 }
 
 fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
-    let window_state = get_window_state(foreground_window.platform_specific_handle);
+    let window_state = get_window_state(&foreground_window);
     match window_state {
-        WindowState::Maximized => restore_window(foreground_window.platform_specific_handle),
-        _ => maximize_window(foreground_window.platform_specific_handle),
+        WindowState::Maximized => restore_window(&foreground_window),
+        _ => maximize_window(&foreground_window),
     }
 }
 
@@ -117,7 +117,7 @@ fn implement_move_action_to_another_screen(
     }
 
     all_monitors.sort_by(|a, b| a.x_offset.cmp(&b.x_offset));
-    let current_monitor = get_current_monitor(foreground_window.platform_specific_handle);
+    let current_monitor = get_current_monitor(&foreground_window);
 
     let mut index = 0;
     let mut found_index: i32 = -1;
@@ -135,7 +135,7 @@ fn implement_move_action_to_another_screen(
         found_index - 1
     }) as usize;
     let target_monitor = &all_monitors[target_index];
-    let window_rect = get_window_position(foreground_window.platform_specific_handle);
+    let window_rect = get_window_position(&foreground_window);
 
     let ratio_left: f32 = ((window_rect.left - current_monitor.x_offset) as f32
         / (current_monitor.width) as f32)
@@ -158,12 +158,12 @@ fn implement_move_action_to_another_screen(
         height: new_height,
     };
     //println!("implement_move_action_to_another_screen: {:?}", target_rect);
-    move_window(foreground_window.platform_specific_handle, &target_rect);
+    move_window(&foreground_window, &target_rect);
 
     // Moving between monitors with diffrent DPI seems to result in different windows sizes in some cases.
     // Issuing the move command again is used as a workaround
     if target_monitor.dpi != current_monitor.dpi {
-        move_window(foreground_window.platform_specific_handle, &target_rect);
+        move_window(&foreground_window, &target_rect);
     }
 }
 

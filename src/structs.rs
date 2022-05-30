@@ -15,6 +15,11 @@ pub struct DpiInfo {
 }
 
 #[derive(Debug)]
+pub struct SelectedWindow {
+    pub platform_specific_handle: isize,
+}
+
+#[derive(Debug)]
 pub struct MonitorInfo {
     pub width: i32,
     pub height: i32,
