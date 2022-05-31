@@ -18,3 +18,6 @@ features = [
 [target.'cfg(windows)'.build-dependencies]
 windows = "0.36.1"
 winres = "0.1.12"
+serde = "1.0"
+serde_yaml = "0.8"
+keyboard-types = "0.6.2"
