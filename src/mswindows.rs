@@ -1,7 +1,10 @@
+extern crate num;
+
 use core::ptr;
 use std::convert::TryFrom;
 use std::mem::size_of;
 
+use num::FromPrimitive;
 use windows::Win32::Foundation::BOOL;
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
@@ -267,7 +270,8 @@ pub fn get_action_from_pressed_key() -> HotKeyAction {
     }
 
     let WPARAM(pressed_key_usize) = message.wParam;
-    HotKeyAction::from(u32::try_from(pressed_key_usize).unwrap())
+    let parsed_key = u32::try_from(pressed_key_usize).unwrap();
+    HotKeyAction::from_u32(parsed_key).unwrap()
 }
 
 pub fn get_window_state(foreground_window: &SelectedWindow) -> WindowState {
