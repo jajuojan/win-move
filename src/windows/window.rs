@@ -29,6 +29,12 @@ impl WindowsWindow {
         HWND(self.platform_specific_handle)
     }
 
+    fn show_window(&self, ncmdshow: SHOW_WINDOW_CMD) {
+        unsafe {
+            ShowWindow(self.get_platform_specific_handle(), ncmdshow);
+        }
+    }
+
     // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getwindowplacement
     fn get_window_internal_info(&self) -> WINDOWPLACEMENT {
         let mut window_info = WINDOWPLACEMENT {
@@ -77,21 +83,15 @@ impl Window for WindowsWindow {
     }
 
     fn restore_window(&self) {
-        unsafe {
-            ShowWindow(self.get_platform_specific_handle(), SW_RESTORE);
-        }
+        self.show_window(SW_RESTORE)
     }
 
     fn minimize_window(&self) {
-        unsafe {
-            ShowWindow(self.get_platform_specific_handle(), SW_SHOWMINIMIZED);
-        }
+        self.show_window(SW_SHOWMINIMIZED)
     }
 
     fn maximize_window(&self) {
-        unsafe {
-            ShowWindow(self.get_platform_specific_handle(), SW_SHOWMAXIMIZED);
-        }
+        self.show_window(SW_SHOWMAXIMIZED)
     }
 
     fn get_window_rect(&self) -> crate::logic::structs::WindowRect {
