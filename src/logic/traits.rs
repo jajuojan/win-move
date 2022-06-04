@@ -14,7 +14,7 @@ pub trait Window {
     fn get_window_position(&self) -> WindowPosition;
     fn get_window_state(&self) -> WindowState;
     fn restore_window(&self);
-    fn minimized_window(&self);
+    fn minimize_window(&self);
     fn maximize_window(&self);
     fn get_window_rect(&self) -> WindowRect;
     fn disable_window_snapping(&self);
