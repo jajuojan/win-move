@@ -82,7 +82,7 @@ impl Window for WindowsWindow {
         }
     }
 
-    fn minimized_window(&self) {
+    fn minimize_window(&self) {
         unsafe {
             ShowWindow(self.get_platform_specific_handle(), SW_SHOWMINIMIZED);
         }

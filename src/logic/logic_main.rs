@@ -93,7 +93,7 @@ fn implement_minimize_action_on_window(foreground_window: Box<dyn Window>) {
     let window_state = foreground_window.get_window_state();
     match window_state {
         WindowState::Minimized => foreground_window.restore_window(),
-        _ => foreground_window.minimized_window(),
+        _ => foreground_window.minimize_window(),
     }
 }
 
@@ -138,6 +138,12 @@ fn implement_move_action_to_another_screen(
         found_index - 1
     }) as usize;
     let target_monitor = &all_monitors[target_index];
+
+    let window_state = foreground_window.get_window_state();
+    if window_state == WindowState::Maximized || window_state == WindowState::Minimized {
+        foreground_window.restore_window();
+    }
+
     let window_rect = foreground_window.get_window_position();
 
     let ratio_left: f32 = ((window_rect.left - current_monitor.x_offset) as f32
@@ -168,6 +174,13 @@ fn implement_move_action_to_another_screen(
     if target_monitor.dpi != current_monitor.dpi {
         foreground_window.move_window(&target_rect);
     }
+
+    // If the window was maximized or minimized when this function started, restore to that state
+    match window_state {
+        WindowState::Maximized => foreground_window.maximize_window(),
+        WindowState::Minimized => foreground_window.minimize_window(),
+        _ => (),
+    };
 }
 
 #[cfg(test)]
