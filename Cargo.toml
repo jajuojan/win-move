@@ -1,7 +1,10 @@
 [package]
 name = "win-move"
 version = "0.2.0"
-edition = "2018"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/jajuojan/win-move"
+edition = "2021"
 
 [dependencies.windows]
 version = "0.36.1"
@@ -16,7 +19,6 @@ features = [
 ]
 
 [target.'cfg(windows)'.build-dependencies]
-windows = "0.36.1"
 winres = "0.1.12"
 
 [dependencies]
