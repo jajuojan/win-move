@@ -1,5 +1,5 @@
-use crate::enums::{HotKeyButton, HotKeyModifier};
-use crate::hotkey_action::HotKeyAction;
+use crate::logic::enums::{HotKeyButton, HotKeyModifier};
+use crate::logic::hotkey_action::HotKeyAction;
 
 #[derive(Debug)]
 pub struct HotkeyMapping {
@@ -12,11 +12,6 @@ pub struct HotkeyMapping {
 pub struct DpiInfo {
     pub x: u32,
     pub y: u32,
-}
-
-#[derive(Debug)]
-pub struct SelectedWindow {
-    pub platform_specific_handle: isize,
 }
 
 #[derive(Debug)]
@@ -52,4 +47,9 @@ pub struct WindowBorderSize {
     pub right: i32,
     pub top: i32,
     pub bottom: i32,
+}
+
+#[derive(Debug)]
+pub struct SelectedWindow {
+    pub platform_specific_handle: isize,
 }

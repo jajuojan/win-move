@@ -1,17 +1,15 @@
-use crate::enums::WindowState;
-use crate::hotkey_action::HotKeyAction;
-use crate::mswindows::{
-    disable_window_snapping, get_action_from_pressed_key, get_all_monitors, get_current_monitor,
-    get_foreground_window, get_window_margin, get_window_position, get_window_state,
-    maximize_window, minimized_window, move_window, restore_window,
-};
-use crate::structs::{MonitorInfo, SelectedWindow, WindowBorderSize, WindowPosition};
+use crate::logic::enums::WindowState;
+use crate::logic::hotkey_action::HotKeyAction;
+use crate::logic::structs::{MonitorInfo, WindowBorderSize, WindowPosition};
+use crate::logic::traits::HotkeyHandler;
+use crate::logic::traits::System;
+use crate::logic::traits::Window;
 
-pub fn main_loop() {
+pub fn main_loop(hotkey_handler: &dyn HotkeyHandler, system: &dyn System) {
     loop {
-        let action = get_action_from_pressed_key();
-        let foreground_window = get_foreground_window();
-        implement_action_on_window(foreground_window, action);
+        let action = hotkey_handler.get_action_from_pressed_key();
+        let foreground_window = system.get_foreground_window();
+        implement_action_on_window(foreground_window, system, action);
     }
 }
 
@@ -21,7 +19,7 @@ pub fn main_loop() {
 // Take this into account as well (currently +2px in height)
 // TODO: Split the compensation of vertical border between top/bottom windows
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
-pub fn calculate_windows_rect(
+fn calculate_windows_rect(
     monitor_info: &MonitorInfo,
     window_margin: &WindowBorderSize,
     action: HotKeyAction,
@@ -60,7 +58,11 @@ pub fn calculate_windows_rect(
     }
 }
 
-fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
+fn implement_action_on_window(
+    foreground_window: Box<dyn Window>,
+    system: &dyn System,
+    action: HotKeyAction,
+) {
     if action <= HotKeyAction::MoveWindowToRightTop {
         implement_move_action_on_window(foreground_window, action);
     } else if action == HotKeyAction::MinimizeWindow {
@@ -68,7 +70,7 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
     } else if action == HotKeyAction::MaximizeWindow {
         implement_maximize_action_on_window(foreground_window);
     } else if action <= HotKeyAction::MoveWindowToRightScreenContinuous {
-        implement_move_action_to_another_screen(foreground_window, action);
+        implement_move_action_to_another_screen(foreground_window, system, action);
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTop {
         println!("TODO: Implement window resize");
     } else if action <= HotKeyAction::DecreaseWindowSizeTowardsRightTopHistoryAware {
@@ -77,29 +79,29 @@ fn implement_action_on_window(foreground_window: SelectedWindow, action: HotKeyA
 }
 
 // TODO: Change the commented printLns into log.debugs where apropriate
-fn implement_move_action_on_window(foreground_window: SelectedWindow, action: HotKeyAction) {
-    let monitor_info = get_current_monitor(&foreground_window);
+fn implement_move_action_on_window(foreground_window: Box<dyn Window>, action: HotKeyAction) {
+    let monitor_info = foreground_window.get_current_monitor();
     //println!("{:?} {:?}", monitor_info, action);
-    let window_margin = get_window_margin(&foreground_window);
+    let window_margin = foreground_window.get_window_margin();
     let target_rect = calculate_windows_rect(&monitor_info, &window_margin, action);
-    disable_window_snapping(&foreground_window);
+    foreground_window.disable_window_snapping();
     //println!("implement_move_action_on_window: {:?}", target_rect);
-    move_window(&foreground_window, &target_rect)
+    foreground_window.move_window(&target_rect)
 }
 
-fn implement_minimize_action_on_window(foreground_window: SelectedWindow) {
-    let window_state = get_window_state(&foreground_window);
+fn implement_minimize_action_on_window(foreground_window: Box<dyn Window>) {
+    let window_state = foreground_window.get_window_state();
     match window_state {
-        WindowState::Minimized => restore_window(&foreground_window),
-        _ => minimized_window(&foreground_window),
+        WindowState::Minimized => foreground_window.restore_window(),
+        _ => foreground_window.minimized_window(),
     }
 }
 
-fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
-    let window_state = get_window_state(&foreground_window);
+fn implement_maximize_action_on_window(foreground_window: Box<dyn Window>) {
+    let window_state = foreground_window.get_window_state();
     match window_state {
-        WindowState::Maximized => restore_window(&foreground_window),
-        _ => maximize_window(&foreground_window),
+        WindowState::Maximized => foreground_window.restore_window(),
+        _ => foreground_window.maximize_window(),
     }
 }
 
@@ -108,16 +110,17 @@ fn implement_maximize_action_on_window(foreground_window: SelectedWindow) {
 // TODO: For maximized, -> restore -> move to other monitor -> maximize
 // TODO: Change the commented printLns into log.debugs where apropriate
 fn implement_move_action_to_another_screen(
-    foreground_window: SelectedWindow,
+    foreground_window: Box<dyn Window>,
+    system: &dyn System,
     _action: HotKeyAction,
 ) {
-    let mut all_monitors = get_all_monitors();
+    let mut all_monitors = system.get_all_monitors();
     if all_monitors.len() == 1 {
         return;
     }
 
     all_monitors.sort_by(|a, b| a.x_offset.cmp(&b.x_offset));
-    let current_monitor = get_current_monitor(&foreground_window);
+    let current_monitor = foreground_window.get_current_monitor();
 
     let mut index = 0;
     let mut found_index: i32 = -1;
@@ -135,7 +138,7 @@ fn implement_move_action_to_another_screen(
         found_index - 1
     }) as usize;
     let target_monitor = &all_monitors[target_index];
-    let window_rect = get_window_position(&foreground_window);
+    let window_rect = foreground_window.get_window_position();
 
     let ratio_left: f32 = ((window_rect.left - current_monitor.x_offset) as f32
         / (current_monitor.width) as f32)
@@ -158,20 +161,22 @@ fn implement_move_action_to_another_screen(
         height: new_height,
     };
     //println!("implement_move_action_to_another_screen: {:?}", target_rect);
-    move_window(&foreground_window, &target_rect);
+    foreground_window.move_window(&target_rect);
 
     // Moving between monitors with diffrent DPI seems to result in different windows sizes in some cases.
     // Issuing the move command again is used as a workaround
     if target_monitor.dpi != current_monitor.dpi {
-        move_window(&foreground_window, &target_rect);
+        foreground_window.move_window(&target_rect);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::hotkey_action::HotKeyAction::{MoveWindowToRightBottom, MoveWindowToRightMiddle};
-    use crate::logic::calculate_windows_rect;
-    use crate::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition};
+    use crate::logic::hotkey_action::HotKeyAction::{
+        MoveWindowToRightBottom, MoveWindowToRightMiddle,
+    };
+    use crate::logic::logic_main::calculate_windows_rect;
+    use crate::logic::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition};
 
     #[test]
     fn size_calc_works() {
