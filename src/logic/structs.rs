@@ -20,7 +20,7 @@ pub struct MonitorInfo {
     pub height: i32,
     pub x_offset: i32,
     pub y_offset: i32,
-    pub platform_specific_handle: isize,    // TODO: put this inside platform specific struct
+    pub platform_specific_handle: isize, // TODO: put this inside platform specific struct
     pub dpi: DpiInfo,
 }
 
@@ -80,7 +80,7 @@ impl From<WindowPosition> for Rect {
             left: value.left,
             top: value.top,
             right: value.left + value.width,
-            bottom: value.top + value.height
+            bottom: value.top + value.height,
         }
     }
 }
