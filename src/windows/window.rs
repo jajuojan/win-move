@@ -15,7 +15,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 
 use crate::logic::enums::WindowState;
-use crate::logic::structs::{WindowBorderSize, WindowPosition, WindowRect};
+use crate::logic::structs::{WindowBorderSize, WindowPosition, Rect};
 use crate::logic::traits::{Monitor, Window};
 
 use super::monitor::WindowsMonitor;
@@ -94,7 +94,7 @@ impl Window for WindowsWindow {
         self.show_window(SW_SHOWMAXIMIZED)
     }
 
-    fn get_window_rect(&self) -> crate::logic::structs::WindowRect {
+    fn get_window_rect(&self) -> crate::logic::structs::Rect {
         let mut r = get_rect_struct();
         unsafe {
             GetWindowRect(self.get_platform_specific_handle(), &mut r);
@@ -174,8 +174,8 @@ fn get_rect_struct() -> RECT {
     }
 }
 
-fn into_window_rect(r: &RECT) -> WindowRect {
-    WindowRect {
+fn into_window_rect(r: &RECT) -> Rect {
+    Rect {
         left: r.left,
         top: r.top,
         right: r.right,
@@ -183,7 +183,7 @@ fn into_window_rect(r: &RECT) -> WindowRect {
     }
 }
 
-fn into_window_position(r: &WindowRect) -> WindowPosition {
+fn into_window_position(r: &Rect) -> WindowPosition {
     WindowPosition {
         left: r.left,
         top: r.top,

@@ -1,7 +1,7 @@
 use super::{
     enums::WindowState,
     hotkey_action::HotKeyAction,
-    structs::{DpiInfo, HotkeyMapping, MonitorInfo, WindowBorderSize, WindowPosition, WindowRect},
+    structs::{DpiInfo, HotkeyMapping, MonitorInfo, WindowBorderSize, WindowPosition, Rect},
 };
 
 pub trait System {
@@ -16,7 +16,7 @@ pub trait Window {
     fn restore_window(&self);
     fn minimize_window(&self);
     fn maximize_window(&self);
-    fn get_window_rect(&self) -> WindowRect;
+    fn get_window_rect(&self) -> Rect;
     fn disable_window_snapping(&self);
     fn get_window_margin(&self) -> WindowBorderSize;
     fn get_current_monitor(&self) -> MonitorInfo;
