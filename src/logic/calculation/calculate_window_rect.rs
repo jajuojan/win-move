@@ -1,6 +1,6 @@
 use crate::logic::{
     hotkey_action::HotKeyAction,
-    structs::{MonitorInfo, WindowBorderSize, WindowPosition},
+    structs::{MonitorInfo, Rect, WindowBorderSize, WindowPosition},
 };
 
 // 1px horizontal border seems to happen even when taking extended frame into account,
@@ -13,7 +13,7 @@ pub fn calculate_window_rect(
     monitor_info: &MonitorInfo,
     window_margin: &WindowBorderSize,
     action: HotKeyAction,
-) -> WindowPosition {
+) -> Rect {
     let left = match action {
         HotKeyAction::MoveWindowToRightBottom
         | HotKeyAction::MoveWindowToRightMiddle
@@ -40,12 +40,12 @@ pub fn calculate_window_rect(
         _ => monitor_info.height / 2,
     };
 
-    WindowPosition {
+    Rect::from(&WindowPosition {
         left: left + window_margin.left,
         top,
         width: width + window_margin.right - window_margin.left,
         height: height + window_margin.bottom + (if window_margin.bottom > 0 { 2 } else { 0 }),
-    }
+    })
 }
 
 #[cfg(test)]
@@ -78,12 +78,12 @@ mod tests {
                 &border,
                 MoveWindowToRightBottom,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: 952,
                 top: 585,
                 width: 975,
                 height: 594,
-            }
+            })
         );
         assert_eq!(
             calculate_window_rect(
@@ -98,12 +98,12 @@ mod tests {
                 &border,
                 MoveWindowToRightMiddle,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: 952,
                 top: 0,
                 width: 975,
                 height: 1179,
-            }
+            })
         );
 
         assert_eq!(
@@ -119,12 +119,12 @@ mod tests {
                 &border,
                 MoveWindowToRightBottom,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: -968,
                 top: 525,
                 width: 975,
                 height: 534,
-            }
+            })
         );
         assert_eq!(
             calculate_window_rect(
@@ -139,12 +139,12 @@ mod tests {
                 &border,
                 MoveWindowToRightMiddle,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: -968,
                 top: 0,
                 width: 975,
                 height: 1059,
-            }
+            })
         );
 
         // TODO: These are currently not working properly
@@ -166,12 +166,12 @@ mod tests {
                 },
                 MoveWindowToRightBottom,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: 2420,
                 top: 344,
                 width: 173,
                 height: -190,
-            }
+            })
         );
         assert_eq!(
             calculate_window_rect(
@@ -191,12 +191,12 @@ mod tests {
                 },
                 MoveWindowToRightMiddle,
             ),
-            WindowPosition {
+            Rect::from(&WindowPosition {
                 left: 2299,
                 top: 0,
                 width: 574,
                 height: 405,
-            }
+            })
         );
     }
 }

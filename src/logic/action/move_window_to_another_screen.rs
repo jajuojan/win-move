@@ -1,7 +1,7 @@
 use crate::logic::{
     enums::WindowState,
     hotkey_action::HotKeyAction,
-    structs::WindowPosition,
+    structs::{Rect, WindowPosition},
     traits::{System, Window},
 };
 
@@ -53,8 +53,8 @@ pub fn implement_move_action_to_another_screen(
     let ratio_top: f32 = ((window_rect.top - current_monitor.y_offset) as f32
         / (current_monitor.height) as f32)
         .abs();
-    let ratio_width: f32 = (window_rect.width as f32 / current_monitor.width as f32).abs();
-    let ratio_height: f32 = (window_rect.height as f32 / current_monitor.height as f32).abs();
+    let ratio_width: f32 = (window_rect.width() as f32 / current_monitor.width as f32).abs();
+    let ratio_height: f32 = (window_rect.height() as f32 / current_monitor.height as f32).abs();
 
     let new_left = (ratio_left * target_monitor.width as f32) as i32 + target_monitor.x_offset;
     let new_top = (ratio_top * target_monitor.height as f32) as i32 + target_monitor.y_offset;
@@ -68,12 +68,12 @@ pub fn implement_move_action_to_another_screen(
         height: new_height,
     };
     //println!("implement_move_action_to_another_screen: {:?}", target_rect);
-    foreground_window.move_window(&target_rect);
+    foreground_window.move_window(&Rect::from(&target_rect));
 
     // Moving between monitors with diffrent DPI seems to result in different windows sizes in some cases.
     // Issuing the move command again is used as a workaround
     if target_monitor.dpi != current_monitor.dpi {
-        foreground_window.move_window(&target_rect);
+        foreground_window.move_window(&Rect::from(&target_rect));
     }
 
     // If the window was maximized or minimized when this function started, restore to that state

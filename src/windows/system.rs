@@ -17,6 +17,7 @@ use crate::logic::{
 };
 use crate::windows::window::WindowsWindow;
 
+use super::helpers::get_monitor_info_struct;
 use super::monitor::WindowsMonitor;
 
 pub struct WindowsSystem {}
@@ -74,15 +75,6 @@ unsafe extern "system" fn monitor_enum_fn(
     BOOL::from(true)
 }
 
-fn get_monitor_info_struct() -> MONITORINFO {
-    MONITORINFO {
-        cbSize: u32::try_from(size_of::<MONITORINFO>()).unwrap(),
-        rcMonitor: get_rect_struct(),
-        rcWork: get_rect_struct(),
-        dwFlags: 0,
-    }
-}
-
 fn into_monitor_info(
     win_monitor_info: &MONITORINFO,
     win_monitor: &HMONITOR,
@@ -95,14 +87,5 @@ fn into_monitor_info(
         y_offset: win_monitor_info.rcWork.top,
         platform_specific_handle: win_monitor.0,
         dpi: *dpi,
-    }
-}
-
-fn get_rect_struct() -> RECT {
-    RECT {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
     }
 }

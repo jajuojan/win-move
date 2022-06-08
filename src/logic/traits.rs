@@ -1,7 +1,7 @@
 use super::{
     enums::WindowState,
     hotkey_action::HotKeyAction,
-    structs::{DpiInfo, HotkeyMapping, MonitorInfo, Rect, WindowBorderSize, WindowPosition},
+    structs::{DpiInfo, HotkeyMapping, MonitorInfo, Rect, WindowBorderSize},
 };
 
 pub trait System {
@@ -10,13 +10,12 @@ pub trait System {
 }
 
 pub trait Window {
-    fn move_window(&self, windows_rect: &WindowPosition);
-    fn get_window_position(&self) -> WindowPosition;
+    fn move_window(&self, windows_rect: &Rect);
+    fn get_window_position(&self) -> Rect;
     fn get_window_state(&self) -> WindowState;
     fn restore_window(&self);
     fn minimize_window(&self);
     fn maximize_window(&self);
-    fn get_window_rect(&self) -> Rect;
     fn disable_window_snapping(&self);
     fn get_window_margin(&self) -> WindowBorderSize;
     fn get_current_monitor(&self) -> MonitorInfo;
