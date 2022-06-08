@@ -1,7 +1,7 @@
 use super::{
     enums::WindowState,
     hotkey_action::HotKeyAction,
-    structs::{DpiInfo, HotkeyMapping, MonitorInfo, WindowBorderSize, WindowPosition, Rect},
+    structs::{DpiInfo, HotkeyMapping, MonitorInfo, Rect, WindowBorderSize, WindowPosition},
 };
 
 pub trait System {

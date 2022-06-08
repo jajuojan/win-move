@@ -15,7 +15,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 
 use crate::logic::enums::WindowState;
-use crate::logic::structs::{WindowBorderSize, WindowPosition, Rect};
+use crate::logic::structs::{Rect, WindowBorderSize, WindowPosition};
 use crate::logic::traits::{Monitor, Window};
 
 use super::monitor::WindowsMonitor;
