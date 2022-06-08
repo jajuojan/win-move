@@ -16,10 +16,11 @@ pub struct DpiInfo {
 
 #[derive(Debug)]
 pub struct MonitorInfo {
-    pub width: i32,
-    pub height: i32,
-    pub x_offset: i32,
-    pub y_offset: i32,
+    pub rect: Rect,
+    pub width: i32,     // TODO: Move into rect
+    pub height: i32,    // TODO: Move into rect
+    pub x_offset: i32,  // TODO: Move into rect
+    pub y_offset: i32,  // TODO: Move into rect
     pub platform_specific_handle: isize, // TODO: put this inside platform specific struct
     pub dpi: DpiInfo,
 }
@@ -62,8 +63,8 @@ impl Rect {
 }
 
 // TODO: temporary
-impl From<Rect> for WindowPosition {
-    fn from(value: Rect) -> Self {
+impl From<&Rect> for WindowPosition {
+    fn from(value: &Rect) -> Self {
         WindowPosition {
             left: value.left,
             top: value.top,
@@ -74,8 +75,8 @@ impl From<Rect> for WindowPosition {
 }
 
 // TODO: temporary
-impl From<WindowPosition> for Rect {
-    fn from(value: WindowPosition) -> Self {
+impl From<&WindowPosition> for Rect {
+    fn from(value: &WindowPosition) -> Self {
         Rect {
             left: value.left,
             top: value.top,
@@ -91,7 +92,6 @@ pub struct Point {
     pub y: i32,
 }
 
-// TODO: replace with Rect
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct WindowBorderSize {

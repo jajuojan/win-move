@@ -5,9 +5,7 @@ use std::mem::size_of;
 
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
-use windows::Win32::Graphics::Gdi::{
-    GetMonitorInfoW, MonitorFromWindow, MONITORINFO, MONITOR_DEFAULTTONEAREST,
-};
+use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetWindowPlacement, GetWindowRect, MoveWindow, SetWindowPlacement, ShowWindow, SHOW_WINDOW_CMD,
     SW_RESTORE, SW_SHOWMAXIMIZED, SW_SHOWMINIMIZED, SW_SHOWNORMAL, WINDOWPLACEMENT,
@@ -18,14 +16,15 @@ use crate::logic::enums::WindowState;
 use crate::logic::structs::{Rect, WindowBorderSize, WindowPosition};
 use crate::logic::traits::{Monitor, Window};
 
-use super::monitor::WindowsMonitor;
+use super::helpers::get_monitor_info_struct;
+use super::{helpers::get_rect_struct, monitor::WindowsMonitor};
 
 pub struct WindowsWindow {
     pub platform_specific_handle: isize,
 }
 
 impl WindowsWindow {
-    pub fn get_platform_specific_handle(&self) -> HWND {
+    fn get_platform_specific_handle(&self) -> HWND {
         HWND(self.platform_specific_handle)
     }
 
@@ -54,22 +53,18 @@ impl WindowsWindow {
 }
 
 impl Window for WindowsWindow {
-    fn move_window(&self, windows_rect: &crate::logic::structs::WindowPosition) {
+    fn move_window(&self, windows_rect: &crate::logic::structs::Rect) {
+        let a = WindowPosition::from(windows_rect);
         unsafe {
             MoveWindow(
                 self.get_platform_specific_handle(),
                 windows_rect.left,
                 windows_rect.top,
-                windows_rect.width,
-                windows_rect.height,
+                a.width,
+                a.height,
                 true,
             );
         }
-    }
-
-    fn get_window_position(&self) -> crate::logic::structs::WindowPosition {
-        let r = self.get_window_rect();
-        into_window_position(&r)
     }
 
     fn get_window_state(&self) -> crate::logic::enums::WindowState {
@@ -94,12 +89,12 @@ impl Window for WindowsWindow {
         self.show_window(SW_SHOWMAXIMIZED)
     }
 
-    fn get_window_rect(&self) -> crate::logic::structs::Rect {
+    fn get_window_position(&self) -> crate::logic::structs::Rect {
         let mut r = get_rect_struct();
         unsafe {
             GetWindowRect(self.get_platform_specific_handle(), &mut r);
         }
-        into_window_rect(&r)
+        Rect::from(&r)
     }
 
     fn disable_window_snapping(&self) {
@@ -126,7 +121,7 @@ impl Window for WindowsWindow {
             }
         };
 
-        let r = self.get_window_rect();
+        let r = self.get_window_position();
         WindowBorderSize {
             left: r.left - r2.left,
             right: r.right - r2.right,
@@ -156,38 +151,13 @@ impl Window for WindowsWindow {
     }
 }
 
-fn get_monitor_info_struct() -> MONITORINFO {
-    MONITORINFO {
-        cbSize: u32::try_from(size_of::<MONITORINFO>()).unwrap(),
-        rcMonitor: get_rect_struct(),
-        rcWork: get_rect_struct(),
-        dwFlags: 0,
-    }
-}
-
-fn get_rect_struct() -> RECT {
-    RECT {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-    }
-}
-
-fn into_window_rect(r: &RECT) -> Rect {
-    Rect {
-        left: r.left,
-        top: r.top,
-        right: r.right,
-        bottom: r.bottom,
-    }
-}
-
-fn into_window_position(r: &Rect) -> WindowPosition {
-    WindowPosition {
-        left: r.left,
-        top: r.top,
-        width: r.right - r.left,
-        height: r.bottom - r.top,
+impl From<&RECT> for Rect {
+    fn from(value: &RECT) -> Self {
+        Rect {
+            left: value.left,
+            top: value.top,
+            right: value.right,
+            bottom: value.bottom,
+        }
     }
 }
