@@ -1,6 +1,6 @@
 use crate::logic::{
     hotkey_action::HotKeyAction,
-    structs::{MonitorInfo, Rect, WindowBorderSize, WindowPosition},
+    structs::{Rect, WindowBorderSize, WindowPosition},
 };
 
 // 1px horizontal border seems to happen even when taking extended frame into account,
@@ -10,34 +10,34 @@ use crate::logic::{
 // TODO: Split the compensation of vertical border between top/bottom windows
 // TODO: Some windows don't seem to have extended frame like 'VS Code', do these have border?
 pub fn calculate_window_rect(
-    monitor_info: &MonitorInfo,
+    monitor_rect: &Rect,
     window_margin: &WindowBorderSize,
     action: HotKeyAction,
 ) -> Rect {
     let left = match action {
         HotKeyAction::MoveWindowToRightBottom
         | HotKeyAction::MoveWindowToRightMiddle
-        | HotKeyAction::MoveWindowToRightTop => (monitor_info.width / 2) - 1,
+        | HotKeyAction::MoveWindowToRightTop => (monitor_rect.width() / 2) - 1,
         _ => 0,
-    } + monitor_info.x_offset;
+    } + monitor_rect.left;
 
     let top = match action {
         HotKeyAction::MoveWindowToLeftBottom
         | HotKeyAction::MoveWindowToBottom
-        | HotKeyAction::MoveWindowToRightBottom => monitor_info.height / 2,
+        | HotKeyAction::MoveWindowToRightBottom => monitor_rect.height() / 2,
         _ => 0,
-    } + monitor_info.y_offset;
+    } + monitor_rect.top;
 
     let width = match action {
-        HotKeyAction::MoveWindowToBottom | HotKeyAction::MoveWindowToTop => monitor_info.width,
-        _ => (monitor_info.width / 2) + 1,
+        HotKeyAction::MoveWindowToBottom | HotKeyAction::MoveWindowToTop => monitor_rect.width(),
+        _ => (monitor_rect.width() / 2) + 1,
     };
 
     let height = match action {
         HotKeyAction::MoveWindowToLeftMiddle | HotKeyAction::MoveWindowToRightMiddle => {
-            monitor_info.height
+            monitor_rect.height()
         }
-        _ => monitor_info.height / 2,
+        _ => monitor_rect.height() / 2,
     };
 
     Rect::from(&WindowPosition {
@@ -67,14 +67,15 @@ mod tests {
         };
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1920,
                     height: 1170,
                     x_offset: 0,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &border,
                 MoveWindowToRightBottom,
             ),
@@ -87,14 +88,15 @@ mod tests {
         );
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1920,
                     height: 1170,
                     x_offset: 0,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &border,
                 MoveWindowToRightMiddle,
             ),
@@ -108,14 +110,15 @@ mod tests {
 
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1920,
                     height: 1050,
                     x_offset: -1920,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &border,
                 MoveWindowToRightBottom,
             ),
@@ -128,14 +131,15 @@ mod tests {
         );
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1920,
                     height: 1050,
                     x_offset: -1920,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &border,
                 MoveWindowToRightMiddle,
             ),
@@ -150,14 +154,15 @@ mod tests {
         // TODO: These are currently not working properly
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1280,
                     height: 689,
                     x_offset: 1920,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &WindowBorderSize {
                     left: -139,
                     right: -607,
@@ -175,14 +180,15 @@ mod tests {
         );
         assert_eq!(
             calculate_window_rect(
-                &MonitorInfo {
+                &Rect::from(&MonitorInfo {
                     width: 1280,
                     height: 689,
                     x_offset: 1920,
                     y_offset: 0,
                     platform_specific_handle: -1,
-                    dpi: DpiInfo { x: 0, y: 0 }
-                },
+                    dpi: DpiInfo { x: 0, y: 0 },
+                    rect: Default::default()
+                }),
                 &WindowBorderSize {
                     left: -260,
                     right: -327,
@@ -198,5 +204,17 @@ mod tests {
                 height: 405,
             })
         );
+    }
+
+    // TODO: remporary
+    impl From<&MonitorInfo> for Rect {
+        fn from(value: &MonitorInfo) -> Self {
+            Rect {
+                left: value.x_offset,
+                top: value.y_offset,
+                right: value.width + value.x_offset,
+                bottom: value.height + value.y_offset,
+            }
+        }
     }
 }

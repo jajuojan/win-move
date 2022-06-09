@@ -14,13 +14,14 @@ pub struct DpiInfo {
     pub y: u32,
 }
 
+// TODO: remove
 #[derive(Debug)]
 pub struct MonitorInfo {
     pub rect: Rect,
-    pub width: i32,     // TODO: Move into rect
-    pub height: i32,    // TODO: Move into rect
-    pub x_offset: i32,  // TODO: Move into rect
-    pub y_offset: i32,  // TODO: Move into rect
+    pub width: i32,                      // TODO: Move into rect
+    pub height: i32,                     // TODO: Move into rect
+    pub x_offset: i32,                   // TODO: Move into rect
+    pub y_offset: i32,                   // TODO: Move into rect
     pub platform_specific_handle: isize, // TODO: put this inside platform specific struct
     pub dpi: DpiInfo,
 }
@@ -58,6 +59,17 @@ impl Rect {
         Point {
             x: (left + ((self.right as f32 - left) / 2.0)) as i32,
             y: (top + ((self.bottom as f32 - top) / 2.0)) as i32,
+        }
+    }
+}
+
+impl Default for Rect {
+    fn default() -> Self {
+        Rect {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
         }
     }
 }
