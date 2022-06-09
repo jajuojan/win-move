@@ -8,13 +8,14 @@ pub fn implement_resize_action_on_window(
     _system: &dyn System,
     _action: HotKeyAction,
 ) {
-    let _monitor_info = _foreground_window.get_current_monitor();
-    println!("{:?} {:?}", _monitor_info, _action);
-    let _increase_amount_x = _monitor_info.width as f32 * 0.1;
-    let _increase_amount_y = _monitor_info.height as f32 * 0.1;
+    let monitor = _foreground_window.get_current_monitor();
+    let _monitor_size = monitor.get_monitor_size();
+    //println!("{:?} {:?}", _monitor, _action);
+    let _increase_amount_x = _monitor_size.width() as f32 * 0.1;
+    let _increase_amount_y = _monitor_size.height() as f32 * 0.1;
 
-    let _monitor_middle_point_x = _monitor_info.width as f32 / 2.0;
-    let _monitor_middle_point_y = _monitor_info.height as f32 / 2.0;
+    let _monitor_middle_point_x = _monitor_size.width() as f32 / 2.0;
+    let _monitor_middle_point_y = _monitor_size.height() as f32 / 2.0;
 
     /*
     let left = match action {

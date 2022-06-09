@@ -1,9 +1,13 @@
+use windows::Win32::Graphics::Gdi::GetMonitorInfoW;
 use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::Graphics::Gdi::MONITORINFO;
 use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
 
-use crate::logic::structs::{DpiInfo, MonitorInfo};
+use crate::logic::structs::Rect;
+use crate::logic::structs::{DpiInfo};
 use crate::logic::traits::Monitor;
+
+use super::helpers::get_monitor_info_struct;
 
 pub struct WindowsMonitor {
     pub platform_specific_handle: HMONITOR,
@@ -16,16 +20,12 @@ impl WindowsMonitor {
         }
     }
 
-    // TODO: Refactori this. Used like this just to get things woking after larger refactoring
-    pub fn into_monitor_info(&self, win_monitor_info: &MONITORINFO, dpi: &DpiInfo) -> MonitorInfo {
-        MonitorInfo {
-            width: win_monitor_info.rcWork.right - win_monitor_info.rcWork.left,
-            height: win_monitor_info.rcWork.bottom - win_monitor_info.rcWork.top,
-            x_offset: win_monitor_info.rcWork.left,
-            y_offset: win_monitor_info.rcWork.top,
-            platform_specific_handle: self.platform_specific_handle.0,
-            dpi: *dpi,
+    fn get_monitor_info(&self) -> MONITORINFO {
+        let mut monitor_info = get_monitor_info_struct();
+        unsafe {
+            GetMonitorInfoW(self.platform_specific_handle, &mut monitor_info);
         }
+        monitor_info
     }
 }
 
@@ -45,6 +45,25 @@ impl Monitor for WindowsMonitor {
         DpiInfo {
             x: *dpi_x,
             y: *dpi_y,
+        }
+    }
+
+    fn get_monitor_size(&self) -> Rect {
+        Rect::from(&self.get_monitor_info())
+    }
+
+    fn get_platform_specific_handle(&self) -> isize {
+        self.platform_specific_handle.0
+    }
+}
+
+impl From<&MONITORINFO> for Rect {
+    fn from(value: &MONITORINFO) -> Self {
+        Rect {
+            left: value.rcWork.left,
+            right: value.rcWork.right,
+            top: value.rcWork.top,
+            bottom: value.rcWork.bottom,
         }
     }
 }

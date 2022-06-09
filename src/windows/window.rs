@@ -5,7 +5,7 @@ use std::mem::size_of;
 
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
-use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTONEAREST};
+use windows::Win32::Graphics::Gdi::{MonitorFromWindow, MONITOR_DEFAULTTONEAREST};
 use windows::Win32::UI::WindowsAndMessaging::{
     GetWindowPlacement, GetWindowRect, MoveWindow, SetWindowPlacement, ShowWindow, SHOW_WINDOW_CMD,
     SW_RESTORE, SW_SHOWMAXIMIZED, SW_SHOWMINIMIZED, SW_SHOWNORMAL, WINDOWPLACEMENT,
@@ -16,7 +16,6 @@ use crate::logic::enums::WindowState;
 use crate::logic::structs::{Rect, WindowBorderSize, WindowPosition};
 use crate::logic::traits::{Monitor, Window};
 
-use super::helpers::get_monitor_info_struct;
 use super::{helpers::get_rect_struct, monitor::WindowsMonitor};
 
 pub struct WindowsWindow {
@@ -130,7 +129,7 @@ impl Window for WindowsWindow {
         }
     }
 
-    fn get_current_monitor(&self) -> crate::logic::structs::MonitorInfo {
+    fn get_current_monitor(&self) -> Box<dyn Monitor> {
         let monitor;
         unsafe {
             monitor = MonitorFromWindow(
@@ -139,15 +138,7 @@ impl Window for WindowsWindow {
             );
         }
 
-        let mut monitor_info = get_monitor_info_struct();
-        unsafe {
-            GetMonitorInfoW(monitor, &mut monitor_info);
-        }
-
-        // TODO: refactor this to better use WindowsMonitor
-        let windows_monitor = WindowsMonitor::new(monitor);
-        let dpi = windows_monitor.get_monitor_dpi();
-        windows_monitor.into_monitor_info(&monitor_info, &dpi)
+        Box::new(WindowsMonitor::new(monitor))
     }
 }
 
