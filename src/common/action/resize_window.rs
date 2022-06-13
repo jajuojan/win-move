@@ -1,15 +1,15 @@
-use crate::logic::{
+use crate::common::{
     hotkey_action::HotKeyAction,
-    traits::{System, Window},
+    traits::{Desktop, Window},
 };
 
 pub fn implement_resize_action_on_window(
     _foreground_window: Box<dyn Window>,
-    _system: &dyn System,
+    _system: &dyn Desktop,
     _action: HotKeyAction,
 ) {
     let monitor = _foreground_window.get_current_monitor();
-    let _monitor_size = monitor.get_monitor_size();
+    let _monitor_size = monitor.get_size();
     //println!("{:?} {:?}", _monitor, _action);
     let _increase_amount_x = _monitor_size.width() as f32 * 0.1;
     let _increase_amount_y = _monitor_size.height() as f32 * 0.1;

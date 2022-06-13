@@ -4,7 +4,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse;
 use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
 use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG};
 
-use crate::logic::{hotkey_action::HotKeyAction, structs::HotkeyMapping, traits::HotkeyHandler};
+use crate::common::{hotkey_action::HotKeyAction, structs::HotkeyMapping, traits::HotkeyHandler};
 
 pub struct WindowsHotKeyHandler {}
 

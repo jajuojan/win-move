@@ -1,8 +1,8 @@
-use crate::logic::{
+use crate::common::{
     enums::WindowState,
     hotkey_action::HotKeyAction,
     structs::{Rect, WindowPosition},
-    traits::{System, Window},
+    traits::{Desktop, Window},
 };
 
 // TODO: Still requires some tweaking in values
@@ -12,7 +12,7 @@ use crate::logic::{
 // TODO: Move the calculations into own functions for testing
 pub fn implement_move_action_to_another_screen(
     foreground_window: Box<dyn Window>,
-    system: &dyn System,
+    system: &dyn Desktop,
     _action: HotKeyAction,
 ) {
     let monitor_boxes = system.get_all_monitors();
@@ -25,7 +25,7 @@ pub fn implement_move_action_to_another_screen(
         return;
     }
 
-    all_monitors.sort_by(|a, b| a.get_monitor_size().left.cmp(&b.get_monitor_size().left));
+    all_monitors.sort_by(|a, b| a.get_size().left.cmp(&b.get_size().left));
     let current_monitor = foreground_window.get_current_monitor();
 
     // TODO: this could use some refactoring
@@ -45,13 +45,13 @@ pub fn implement_move_action_to_another_screen(
     }) as usize;
     let target_monitor = &all_monitors[target_index];
 
-    let window_state = foreground_window.get_window_state();
+    let window_state = foreground_window.get_state();
     if window_state == WindowState::Maximized || window_state == WindowState::Minimized {
-        foreground_window.restore_window();
+        foreground_window.restore();
     }
 
-    let window_rect = foreground_window.get_window_position();
-    let current_monito_size = current_monitor.get_monitor_size();
+    let window_rect = foreground_window.get_position();
+    let current_monito_size = current_monitor.get_size();
 
     let ratio_left: f32 = ((window_rect.left - current_monito_size.left) as f32
         / (current_monito_size.width()) as f32)
@@ -63,7 +63,7 @@ pub fn implement_move_action_to_another_screen(
     let ratio_height: f32 =
         (window_rect.height() as f32 / current_monito_size.height() as f32).abs();
 
-    let target_monitor_size = target_monitor.get_monitor_size();
+    let target_monitor_size = target_monitor.get_size();
     let new_left =
         (ratio_left * target_monitor_size.width() as f32) as i32 + target_monitor_size.left;
     let new_top =
@@ -82,14 +82,14 @@ pub fn implement_move_action_to_another_screen(
 
     // Moving between monitors with diffrent DPI seems to result in different windows sizes in some cases.
     // Issuing the move command again is used as a workaround
-    if target_monitor.get_monitor_dpi() != current_monitor.get_monitor_dpi() {
+    if target_monitor.get_dpi_info() != current_monitor.get_dpi_info() {
         foreground_window.move_window(&Rect::from(&target_rect));
     }
 
     // If the window was maximized or minimized when this function started, restore to that state
     match window_state {
-        WindowState::Maximized => foreground_window.maximize_window(),
-        WindowState::Minimized => foreground_window.minimize_window(),
+        WindowState::Maximized => foreground_window.maximize(),
+        WindowState::Minimized => foreground_window.minimize(),
         _ => (),
     };
 }

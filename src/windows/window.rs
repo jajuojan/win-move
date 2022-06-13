@@ -12,9 +12,9 @@ use windows::Win32::UI::WindowsAndMessaging::{
     WINDOWPLACEMENT_FLAGS,
 };
 
-use crate::logic::enums::WindowState;
-use crate::logic::structs::{Rect, WindowBorderSize, WindowPosition};
-use crate::logic::traits::{Monitor, Window};
+use crate::common::enums::WindowState;
+use crate::common::structs::{Rect, WindowBorderSize, WindowPosition};
+use crate::common::traits::{Monitor, Window};
 
 use super::{helpers::get_rect_struct, monitor::WindowsMonitor};
 
@@ -52,7 +52,7 @@ impl WindowsWindow {
 }
 
 impl Window for WindowsWindow {
-    fn move_window(&self, windows_rect: &crate::logic::structs::Rect) {
+    fn move_window(&self, windows_rect: &crate::common::structs::Rect) {
         let a = WindowPosition::from(windows_rect);
         unsafe {
             MoveWindow(
@@ -66,7 +66,7 @@ impl Window for WindowsWindow {
         }
     }
 
-    fn get_window_state(&self) -> crate::logic::enums::WindowState {
+    fn get_state(&self) -> crate::common::enums::WindowState {
         let window_info = self.get_window_internal_info();
         match window_info.showCmd {
             SW_SHOWNORMAL => WindowState::Normal,
@@ -76,19 +76,19 @@ impl Window for WindowsWindow {
         }
     }
 
-    fn restore_window(&self) {
+    fn restore(&self) {
         self.show_window(SW_RESTORE)
     }
 
-    fn minimize_window(&self) {
+    fn minimize(&self) {
         self.show_window(SW_SHOWMINIMIZED)
     }
 
-    fn maximize_window(&self) {
+    fn maximize(&self) {
         self.show_window(SW_SHOWMAXIMIZED)
     }
 
-    fn get_window_position(&self) -> crate::logic::structs::Rect {
+    fn get_position(&self) -> crate::common::structs::Rect {
         let mut r = get_rect_struct();
         unsafe {
             GetWindowRect(self.get_platform_specific_handle(), &mut r);
@@ -96,7 +96,7 @@ impl Window for WindowsWindow {
         Rect::from(&r)
     }
 
-    fn disable_window_snapping(&self) {
+    fn disable_snapping(&self) {
         let mut window_info = self.get_window_internal_info();
         window_info.showCmd = SW_SHOWNORMAL;
         unsafe {
@@ -104,7 +104,7 @@ impl Window for WindowsWindow {
         }
     }
 
-    fn get_window_margin(&self) -> crate::logic::structs::WindowBorderSize {
+    fn get_margin(&self) -> crate::common::structs::WindowBorderSize {
         let mut r2 = get_rect_struct();
 
         unsafe {
@@ -120,7 +120,7 @@ impl Window for WindowsWindow {
             }
         };
 
-        let r = self.get_window_position();
+        let r = self.get_position();
         WindowBorderSize {
             left: r.left - r2.left,
             right: r.right - r2.right,

@@ -1,4 +1,4 @@
-pub mod logic;
+pub mod common;
 pub mod windows;
 
 #[macro_use]
