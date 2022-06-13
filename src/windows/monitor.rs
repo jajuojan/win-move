@@ -3,9 +3,9 @@ use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::Graphics::Gdi::MONITORINFO;
 use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
 
-use crate::logic::structs::Rect;
-use crate::logic::structs::{DpiInfo};
-use crate::logic::traits::Monitor;
+use crate::common::structs::DpiInfo;
+use crate::common::structs::Rect;
+use crate::common::traits::Monitor;
 
 use super::helpers::get_monitor_info_struct;
 
@@ -30,7 +30,7 @@ impl WindowsMonitor {
 }
 
 impl Monitor for WindowsMonitor {
-    fn get_monitor_dpi(&self) -> crate::logic::structs::DpiInfo {
+    fn get_dpi_info(&self) -> crate::common::structs::DpiInfo {
         let mut dpi_x: Box<u32> = Box::new(0);
         let mut dpi_y: Box<u32> = Box::new(0);
         unsafe {
@@ -48,7 +48,7 @@ impl Monitor for WindowsMonitor {
         }
     }
 
-    fn get_monitor_size(&self) -> Rect {
+    fn get_size(&self) -> Rect {
         Rect::from(&self.get_monitor_info())
     }
 

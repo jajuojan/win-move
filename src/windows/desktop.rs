@@ -7,20 +7,20 @@ use windows::Win32::Graphics::Gdi::HDC;
 use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
 
-use crate::logic::traits::{Monitor, System, Window};
+use crate::common::traits::{Desktop, Monitor, Window};
 use crate::windows::window::WindowsWindow;
 
 use super::monitor::WindowsMonitor;
 
-pub struct WindowsSystem {}
+pub struct WindowsDesktop {}
 
-impl WindowsSystem {
+impl WindowsDesktop {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl System for WindowsSystem {
+impl Desktop for WindowsDesktop {
     fn get_foreground_window(&self) -> Box<dyn Window> {
         let foreground_window;
         unsafe {

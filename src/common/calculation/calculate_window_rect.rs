@@ -1,4 +1,4 @@
-use crate::logic::{
+use crate::common::{
     hotkey_action::HotKeyAction,
     structs::{Rect, WindowBorderSize, WindowPosition},
 };
@@ -50,12 +50,12 @@ pub fn calculate_window_rect(
 
 #[cfg(test)]
 mod tests {
-    use crate::logic::hotkey_action::HotKeyAction::{
+    use crate::common::hotkey_action::HotKeyAction::{
         MoveWindowToRightBottom, MoveWindowToRightMiddle,
     };
 
     use super::*;
-    use crate::logic::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition};
+    use crate::common::structs::{DpiInfo, MonitorInfo, WindowBorderSize, WindowPosition};
 
     #[test]
     fn size_calc_works() {

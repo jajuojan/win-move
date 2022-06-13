@@ -1,5 +1,5 @@
-use crate::logic::enums::{HotKeyButton, HotKeyModifier};
-use crate::logic::hotkey_action::HotKeyAction;
+use crate::common::enums::{HotKeyButton, HotKeyModifier};
+use crate::common::hotkey_action::HotKeyAction;
 
 #[derive(Debug)]
 pub struct HotkeyMapping {
