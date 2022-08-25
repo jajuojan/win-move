@@ -1,10 +1,12 @@
 [package]
 name = "win-move"
 version = "0.2.0"
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/jajuojan/win-move"
+authors = ["Jani Ojanen <jajuojan@gmail.com>"]
 edition = "2021"
+readme = "README.md"
+description="Move windows on desktop via shortcuts"
+repository = "https://github.com/jajuojan/win-move"
+license = "MIT"
 
 [dependencies.windows]
 version = "0.36.1"
@@ -24,3 +26,8 @@ winres = "0.1.12"
 [dependencies]
 num = "0.4.0"
 enum_primitive = "0.1.1"
+
+[profile.release]
+strip = true
+lto = true
+codegen-units = 1
