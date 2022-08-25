@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Clippy
         # uses: actions-rs/clippy-check@v1
-        uses: ErichDonGubler/clippy-check@6723b97308d5e57f643a52398b9e5121813b5834
+        uses: ErichDonGubler/clippy-check@b5b5f21f4797c02da247df37026fcd0a5024aa4d
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
