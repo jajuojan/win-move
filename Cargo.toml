@@ -9,7 +9,7 @@ repository = "https://github.com/jajuojan/win-move"
 license = "MIT"
 
 [dependencies.windows]
-version = "0.39.0"
+version = "0.44.0"
 features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
