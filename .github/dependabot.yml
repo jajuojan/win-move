@@ -26,3 +26,5 @@ updates:
       - "dependencies"
       - "github_actions"
       - "bot"
+    ignore:
+      - dependency-name: "ErichDonGubler/clippy-check"
