@@ -28,3 +28,7 @@ updates:
       - "bot"
     ignore:
       - dependency-name: "ErichDonGubler/clippy-check"
+    groups:
+      actions-deps:
+        patterns:
+          - "*"
