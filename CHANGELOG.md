@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/jajuojan/win-move/compare/v0.2.0...v0.2.1) (2025-01-28)
+
+
+### Bug Fixes
+
+* [#68](https://github.com/jajuojan/win-move/issues/68) Respect window-state when switching monitor ([2d47e01](https://github.com/jajuojan/win-move/commit/2d47e01cc5325b2530f511d13d6befefab992e96))
+
 ## [0.2.0](https://github.com/jajuojan/win-move/compare/v0.1.1...v0.2.0) (2022-05-30)
 
 
