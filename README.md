@@ -8,7 +8,7 @@ Moves windows on desktop via keyboard shortcuts.
 - `CTRL + 0`: Moves the focused window between monitors.
 
 ## Supported OS:
-* Windows 10
+* Windows 10/11
 
 ## Running
 Run With cargo: `cargo run`\
