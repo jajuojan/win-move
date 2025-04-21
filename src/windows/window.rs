@@ -3,6 +3,8 @@ extern crate num;
 use std::convert::TryFrom;
 use std::mem::size_of;
 
+use log::{error, info}; // Add log macros
+
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Dwm::{DwmGetWindowAttribute, DWMWA_EXTENDED_FRAME_BOUNDS};
 use windows::Win32::Graphics::Gdi::{MonitorFromWindow, MONITOR_DEFAULTTONEAREST};
@@ -24,10 +26,15 @@ pub struct WindowsWindow {
 
 impl WindowsWindow {
     fn get_platform_specific_handle(&self) -> HWND {
+        info!(
+            "get_platform_specific_handle: {:?}",
+            self.platform_specific_handle
+        );
         HWND(self.platform_specific_handle)
     }
 
     fn show_window(&self, ncmdshow: SHOW_WINDOW_CMD) {
+        info!("show_window: command: {:?}", ncmdshow);
         unsafe {
             ShowWindow(self.get_platform_specific_handle(), ncmdshow);
         }
@@ -47,12 +54,20 @@ impl WindowsWindow {
         unsafe {
             GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info);
         };
+        info!("get_window_internal_info: {:?}", window_info);
         window_info
     }
 }
 
 impl Window for WindowsWindow {
     fn move_window(&self, windows_rect: &crate::common::structs::Rect) {
+        info!(
+            "move_window: position: left={}, top={}, width={}, height={}",
+            windows_rect.left,
+            windows_rect.top,
+            windows_rect.right - windows_rect.left,
+            windows_rect.bottom - windows_rect.top
+        );
         let a = WindowPosition::from(windows_rect);
         unsafe {
             MoveWindow(
@@ -64,27 +79,35 @@ impl Window for WindowsWindow {
                 true,
             );
         }
+        if log::log_enabled!(log::Level::Info) {
+            self.get_window_internal_info();
+        }
     }
 
     fn get_state(&self) -> crate::common::enums::WindowState {
         let window_info = self.get_window_internal_info();
-        match window_info.showCmd {
+        let state = match window_info.showCmd {
             SW_SHOWNORMAL => WindowState::Normal,
             SW_SHOWMINIMIZED => WindowState::Minimized,
             SW_SHOWMAXIMIZED => WindowState::Maximized,
             _ => WindowState::Other,
-        }
+        };
+        info!("get_state: state: {:?}", state);
+        state
     }
 
     fn restore(&self) {
+        info!("restore.");
         self.show_window(SW_RESTORE)
     }
 
     fn minimize(&self) {
+        info!("minimize");
         self.show_window(SW_SHOWMINIMIZED)
     }
 
     fn maximize(&self) {
+        info!("maximize");
         self.show_window(SW_SHOWMAXIMIZED)
     }
 
@@ -93,10 +116,13 @@ impl Window for WindowsWindow {
         unsafe {
             GetWindowRect(self.get_platform_specific_handle(), &mut r);
         }
-        Rect::from(&r)
+        let rect = Rect::from(&r);
+        info!("get_position: {:?}", rect);
+        rect
     }
 
     fn disable_snapping(&self) {
+        info!("disable_snapping");
         let mut window_info = self.get_window_internal_info();
         window_info.showCmd = SW_SHOWNORMAL;
         unsafe {
@@ -116,17 +142,19 @@ impl Window for WindowsWindow {
             )
             .is_err()
             {
-                panic!("Error from DwmGetWindowAttribute");
+                error!("get_margin: Error from DwmGetWindowAttribute");
             }
         };
 
         let r = self.get_position();
-        WindowBorderSize {
+        let margin = WindowBorderSize {
             left: r.left - r2.left,
             right: r.right - r2.right,
             top: r.top - r2.top,
             bottom: r.bottom - r2.bottom,
-        }
+        };
+        info!("get_margin: margin: {:?}", margin);
+        margin
     }
 
     fn get_current_monitor(&self) -> Box<dyn Monitor> {
@@ -137,7 +165,7 @@ impl Window for WindowsWindow {
                 MONITOR_DEFAULTTONEAREST,
             );
         }
-
+        info!("get_current_monitor: handle: {:?}", monitor);
         Box::new(WindowsMonitor::new(monitor))
     }
 }

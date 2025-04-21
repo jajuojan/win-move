@@ -22,7 +22,7 @@ pub enum HotKeyModifier {
     ModAlt = 2,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum WindowState {
     Other = 0,
     Normal = 1,
