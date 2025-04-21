@@ -7,6 +7,8 @@ fn main() {
     // TODO: fill these from settings
     let keys = vec![];
 
+    env_logger::init();
+
     let hotkey_handler = WindowsHotKeyHandler::new();
     let system = WindowsDesktop::new();
 
