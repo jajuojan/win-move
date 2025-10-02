@@ -1,7 +1,7 @@
 extern crate num;
 
 enum_from_primitive! {
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum HotKeyAction {
     // Move window to specified location
     MoveWindowToLeftBottom = 1001,

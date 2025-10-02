@@ -1,25 +1,25 @@
-// TODO: This requires a better solution once keys are freely selectable in config
 /// Enums for buttons
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum HotKeyButton {
-    VkNumpad1 = 1,
-    VkNumpad2 = 2,
-    VkNumpad3 = 3,
-    VkNumpad4 = 4,
-    VkNumpad5 = 5,
-    VkNumpad6 = 6,
-    VkNumpad7 = 7,
-    VkNumpad8 = 8,
-    VkNumpad9 = 9,
-    VkNumpad0 = 10,
+    VkNumpad0,
+    VkNumpad1,
+    VkNumpad2,
+    VkNumpad3,
+    VkNumpad4,
+    VkNumpad5,
+    VkNumpad6,
+    VkNumpad7,
+    VkNumpad8,
+    VkNumpad9,
+    VkDecimal,
 }
 
 /// Enums for modifiers
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum HotKeyModifier {
-    None = 0,
-    ModControl = 1,
-    ModAlt = 2,
+    None,
+    ModControl,
+    ModAlt,
 }
 
 #[derive(Debug, PartialEq)]

@@ -10,6 +10,17 @@ Moves windows on desktop via keyboard shortcuts.
 ## Supported OS:
 * Windows 10/11
 
+## Configuration
+win-move supports custom hotkey bindings via a configuration file. To customize:
+
+1. Copy `config.toml.example` to `config.toml` in the same directory as the executable
+2. Edit the hotkeys to your preference
+3. Restart win-move
+
+If no configuration file is found, win-move will use the default hotkey bindings shown above.
+
+See `config.toml.example` for all available actions and configuration options.
+
 ## Running
 Run With cargo: `cargo run`\
 or\
