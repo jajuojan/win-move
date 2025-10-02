@@ -29,9 +29,8 @@ impl WindowsHotKeyHandler {
 }
 
 impl HotkeyHandler for WindowsHotKeyHandler {
-    fn register_hotkeys(&self, _keys: Vec<HotkeyMapping>) {
-        // TODO: Implement
-        let hot_keys = map_keys();
+    fn register_hotkeys(&self, keys: Vec<HotkeyMapping>) {
+        let hot_keys = map_keys_from_config(keys);
         self.do_register_hotkeys(hot_keys);
     }
 
@@ -61,64 +60,38 @@ struct HotkeyMappingWin {
     modifier: HOT_KEY_MODIFIERS,
 }
 
-// TODO: Implement mapping from HotkeyMapping
-fn map_keys() -> Vec<HotkeyMappingWin> {
-    let modifier = KeyboardAndMouse::MOD_CONTROL;
-    vec![
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToLeftBottom,
-            key: KeyboardAndMouse::VK_NUMPAD1,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToBottom,
-            key: KeyboardAndMouse::VK_NUMPAD2,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToRightBottom,
-            key: KeyboardAndMouse::VK_NUMPAD3,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToLeftMiddle,
-            key: KeyboardAndMouse::VK_NUMPAD4,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToRightMiddle,
-            key: KeyboardAndMouse::VK_NUMPAD6,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToLeftTop,
-            key: KeyboardAndMouse::VK_NUMPAD7,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToTop,
-            key: KeyboardAndMouse::VK_NUMPAD8,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToRightTop,
-            key: KeyboardAndMouse::VK_NUMPAD9,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MoveWindowToLeftScreenContinuous,
-            key: KeyboardAndMouse::VK_NUMPAD0,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MinimizeWindow,
-            key: KeyboardAndMouse::VK_DECIMAL,
-            modifier,
-        },
-        HotkeyMappingWin {
-            action: HotKeyAction::MaximizeWindow,
-            key: KeyboardAndMouse::VK_NUMPAD5,
-            modifier,
-        },
-    ]
+use crate::common::enums::{HotKeyButton, HotKeyModifier};
+
+fn map_keys_from_config(keys: Vec<HotkeyMapping>) -> Vec<HotkeyMappingWin> {
+    keys.into_iter()
+        .map(|mapping| HotkeyMappingWin {
+            action: mapping.action,
+            key: map_button_to_virtual_key(&mapping.key),
+            modifier: map_modifier_to_hotkey_modifier(&mapping.modifier),
+        })
+        .collect()
+}
+
+fn map_button_to_virtual_key(button: &HotKeyButton) -> VIRTUAL_KEY {
+    match button {
+        HotKeyButton::VkNumpad0 => KeyboardAndMouse::VK_NUMPAD0,
+        HotKeyButton::VkNumpad1 => KeyboardAndMouse::VK_NUMPAD1,
+        HotKeyButton::VkNumpad2 => KeyboardAndMouse::VK_NUMPAD2,
+        HotKeyButton::VkNumpad3 => KeyboardAndMouse::VK_NUMPAD3,
+        HotKeyButton::VkNumpad4 => KeyboardAndMouse::VK_NUMPAD4,
+        HotKeyButton::VkNumpad5 => KeyboardAndMouse::VK_NUMPAD5,
+        HotKeyButton::VkNumpad6 => KeyboardAndMouse::VK_NUMPAD6,
+        HotKeyButton::VkNumpad7 => KeyboardAndMouse::VK_NUMPAD7,
+        HotKeyButton::VkNumpad8 => KeyboardAndMouse::VK_NUMPAD8,
+        HotKeyButton::VkNumpad9 => KeyboardAndMouse::VK_NUMPAD9,
+        HotKeyButton::VkDecimal => KeyboardAndMouse::VK_DECIMAL,
+    }
+}
+
+fn map_modifier_to_hotkey_modifier(modifier: &HotKeyModifier) -> HOT_KEY_MODIFIERS {
+    match modifier {
+        HotKeyModifier::None => KeyboardAndMouse::HOT_KEY_MODIFIERS(0),
+        HotKeyModifier::ModControl => KeyboardAndMouse::MOD_CONTROL,
+        HotKeyModifier::ModAlt => KeyboardAndMouse::MOD_ALT,
+    }
 }
