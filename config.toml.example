@@ -1,0 +1,84 @@
+# win-move configuration file
+# Place this file as 'config.toml' in the same directory as the win-move executable
+# to customize hotkey bindings.
+
+# Each hotkey has three fields:
+# - action: The action to perform (see list below)
+# - key: The keyboard key (VkNumpad0-9, VkDecimal)
+# - modifier: The modifier key (None, ModControl, ModAlt)
+
+# Available Actions:
+# Window Movement:
+#   - MoveWindowToLeftBottom, MoveWindowToBottom, MoveWindowToRightBottom
+#   - MoveWindowToLeftMiddle, MoveWindowToRightMiddle
+#   - MoveWindowToLeftTop, MoveWindowToTop, MoveWindowToRightTop
+# 
+# Window Control:
+#   - MinimizeWindow, MaximizeWindow
+#   - MoveWindowToLeftScreen, MoveWindowToRightScreen
+#   - MoveWindowToLeftScreenContinuous, MoveWindowToRightScreenContinuous
+#
+# Window Resizing:
+#   - ChangeWindowSizeTowardsLeftBottom, ChangeWindowSizeTowardsBottom, ChangeWindowSizeTowardsRightBottom
+#   - ChangeWindowSizeTowardsLeftMiddle, ChangeWindowSizeTowardsRightMiddle
+#   - ChangeWindowSizeTowardsLeftTop, ChangeWindowSizeTowardsTop, ChangeWindowSizeTowardsRightTop
+#   - ChangeWindowSizeTowardsLeftBottomHistoryAware, ChangeWindowSizeTowardsBottomHistoryAware, ChangeWindowSizeTowardsRightBottomHistoryAware
+#   - ChangeWindowSizeTowardsLeftMiddleHistoryAware, ChangeWindowSizeTowardsRightMiddleHistoryAware
+#   - ChangeWindowSizeTowardsLeftTopHistoryAware, ChangeWindowSizeTowardsTopHistoryAware, ChangeWindowSizeTowardsRightTopHistoryAware
+
+# Default hotkeys (same as if no config file is present):
+
+[[hotkeys]]
+action = "MoveWindowToLeftBottom"
+key = "VkNumpad1"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToBottom"
+key = "VkNumpad2"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToRightBottom"
+key = "VkNumpad3"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToLeftMiddle"
+key = "VkNumpad4"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToRightMiddle"
+key = "VkNumpad6"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToLeftTop"
+key = "VkNumpad7"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToTop"
+key = "VkNumpad8"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToRightTop"
+key = "VkNumpad9"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MoveWindowToLeftScreenContinuous"
+key = "VkNumpad0"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MinimizeWindow"
+key = "VkDecimal"
+modifier = "ModControl"
+
+[[hotkeys]]
+action = "MaximizeWindow"
+key = "VkNumpad5"
+modifier = "ModControl"

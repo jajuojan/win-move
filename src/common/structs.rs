@@ -1,7 +1,7 @@
 use crate::common::enums::{HotKeyButton, HotKeyModifier};
 use crate::common::hotkey_action::HotKeyAction;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct HotkeyMapping {
     pub action: HotKeyAction,
     pub key: HotKeyButton,
