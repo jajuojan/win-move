@@ -35,6 +35,7 @@ win-move is a Windows utility written in Rust that enables keyboard shortcuts fo
 - Use `cargo fmt` for formatting (checked in CI)
 - Use `cargo clippy` for linting (checked in CI)
 - Run `cargo test` for testing (CI runs on Windows)
+- Use 'Conventional Commits'-style commits
 
 ### Important Patterns
 
