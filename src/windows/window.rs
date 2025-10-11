@@ -45,7 +45,7 @@ impl WindowsWindow {
         let mut window_info = WINDOWPLACEMENT {
             length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
             flags: WINDOWPLACEMENT_FLAGS(0),
-            showCmd: SHOW_WINDOW_CMD(0),
+            showCmd: 0,
             ptMinPosition: POINT { x: 0, y: 0 },
             ptMaxPosition: POINT { x: 0, y: 0 },
             rcNormalPosition: get_rect_struct(),
@@ -86,11 +86,14 @@ impl Window for WindowsWindow {
 
     fn get_state(&self) -> crate::common::enums::WindowState {
         let window_info = self.get_window_internal_info();
-        let state = match window_info.showCmd {
-            SW_SHOWNORMAL => WindowState::Normal,
-            SW_SHOWMINIMIZED => WindowState::Minimized,
-            SW_SHOWMAXIMIZED => WindowState::Maximized,
-            _ => WindowState::Other,
+        let state = if window_info.showCmd == SW_SHOWNORMAL.0 as u32 {
+            WindowState::Normal
+        } else if window_info.showCmd == SW_SHOWMINIMIZED.0 as u32 {
+            WindowState::Minimized
+        } else if window_info.showCmd == SW_SHOWMAXIMIZED.0 as u32 {
+            WindowState::Maximized
+        } else {
+            WindowState::Other
         };
         info!("get_state: state: {:?}", state);
         state
@@ -124,7 +127,7 @@ impl Window for WindowsWindow {
     fn disable_snapping(&self) {
         info!("disable_snapping");
         let mut window_info = self.get_window_internal_info();
-        window_info.showCmd = SW_SHOWNORMAL;
+        window_info.showCmd = SW_SHOWNORMAL.0 as u32;
         unsafe {
             SetWindowPlacement(self.get_platform_specific_handle(), &window_info);
         }
