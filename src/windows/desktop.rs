@@ -1,5 +1,3 @@
-use core::ptr;
-
 use windows::Win32::Foundation::BOOL;
 use windows::Win32::Foundation::{LPARAM, RECT};
 use windows::Win32::Graphics::Gdi::EnumDisplayMonitors;
