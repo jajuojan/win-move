@@ -37,7 +37,7 @@ impl Desktop for WindowsDesktop {
             let monitors_pointer = Box::into_raw(Box::new(Vec::<HMONITOR>::new()));
             let _res_bool = EnumDisplayMonitors(
                 HDC(0),
-                ptr::null_mut(),
+                None,
                 Some(monitor_enum_fn),
                 LPARAM(monitors_pointer as isize),
             );
