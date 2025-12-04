@@ -3,9 +3,13 @@ use win_move::common::logic::main_loop;
 use win_move::common::traits::HotkeyHandler;
 use win_move::windows::desktop::WindowsDesktop;
 use win_move::windows::hotkey_handler::WindowsHotKeyHandler;
+use win_move::windows::system_tray::SystemTray;
 
 fn main() {
     env_logger::init();
+
+    // Create system tray icon
+    let _tray = SystemTray::new().expect("Failed to create system tray icon");
 
     let keys = get_config_hotkeys();
 

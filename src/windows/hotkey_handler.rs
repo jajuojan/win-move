@@ -2,7 +2,9 @@ use num::FromPrimitive;
 use windows::Win32::Foundation::{HWND, LPARAM, POINT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse;
 use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
-use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG};
+use windows::Win32::UI::WindowsAndMessaging::{
+    DispatchMessageW, GetMessageW, MSG, WM_HOTKEY, WM_QUIT,
+};
 
 use crate::common::{hotkey_action::HotKeyAction, structs::HotkeyMapping, traits::HotkeyHandler};
 
@@ -45,12 +47,27 @@ impl HotkeyHandler for WindowsHotKeyHandler {
         };
 
         unsafe {
-            let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
-        }
+            loop {
+                let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
 
-        let WPARAM(pressed_key_usize) = message.wParam;
-        let parsed_key = u32::try_from(pressed_key_usize).unwrap();
-        HotKeyAction::from_u32(parsed_key).unwrap()
+                // Check if we should exit
+                if message.message == WM_QUIT {
+                    std::process::exit(0);
+                }
+
+                // Dispatch message to window procedures (for system tray)
+                DispatchMessageW(&message);
+
+                // Check if it's a hotkey message
+                if message.message == WM_HOTKEY {
+                    let WPARAM(pressed_key_usize) = message.wParam;
+                    let parsed_key = u32::try_from(pressed_key_usize).unwrap();
+                    if let Some(action) = HotKeyAction::from_u32(parsed_key) {
+                        return action;
+                    }
+                }
+            }
+        }
     }
 }
 
