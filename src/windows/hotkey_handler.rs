@@ -3,7 +3,7 @@ use windows::Win32::Foundation::{HWND, LPARAM, POINT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse;
 use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
 use windows::Win32::UI::WindowsAndMessaging::{
-    DispatchMessageW, GetMessageW, MSG, WM_HOTKEY, WM_QUIT,
+    DispatchMessageW, GetMessageW, MSG, WM_HOTKEY,
 };
 
 use crate::common::{hotkey_action::HotKeyAction, structs::HotkeyMapping, traits::HotkeyHandler};
@@ -48,10 +48,11 @@ impl HotkeyHandler for WindowsHotKeyHandler {
 
         unsafe {
             loop {
-                let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
+                let msg_result = GetMessageW(&mut message, HWND(0), 0, 0);
 
-                // Check if we should exit
-                if message.message == WM_QUIT {
+                // GetMessageW returns 0 for WM_QUIT, -1 for error, >0 otherwise
+                if msg_result.0 == 0 {
+                    // WM_QUIT received - exit the application
                     std::process::exit(0);
                 }
 

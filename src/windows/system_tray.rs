@@ -8,10 +8,10 @@ use windows::Win32::UI::Shell::{
     Shell_NotifyIconW, NIF_ICON, NIF_MESSAGE, NIF_TIP, NIM_ADD, NIM_DELETE, NOTIFYICONDATAW,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW,
-    GetCursorPos, LoadIconW, PostQuitMessage, RegisterClassW, SetForegroundWindow, TrackPopupMenu,
-    CS_HREDRAW, CS_VREDRAW, CW_USEDEFAULT, IDI_APPLICATION, MF_STRING, TPM_LEFTALIGN,
-    TPM_RIGHTBUTTON, WM_APP, WM_COMMAND, WM_DESTROY, WNDCLASSW, WS_OVERLAPPEDWINDOW,
+    AppendMenuW, CreatePopupMenu, CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos,
+    LoadIconW, PostQuitMessage, RegisterClassW, SetForegroundWindow, TrackPopupMenu, CS_HREDRAW,
+    CS_VREDRAW, CW_USEDEFAULT, IDI_APPLICATION, MF_STRING, TPM_LEFTALIGN, TPM_RIGHTBUTTON, WM_APP,
+    WM_COMMAND, WM_DESTROY, WM_RBUTTONUP, WNDCLASSW, WS_OVERLAPPEDWINDOW,
 };
 
 const WM_TRAYICON: u32 = WM_APP + 1;
@@ -124,8 +124,7 @@ unsafe extern "system" fn window_proc(
 ) -> LRESULT {
     match msg {
         WM_TRAYICON => {
-            if lparam.0 as u32 == 0x0205 {
-                // WM_RBUTTONUP
+            if lparam.0 as u32 == WM_RBUTTONUP {
                 show_context_menu(hwnd);
             }
             LRESULT(0)
@@ -226,8 +225,4 @@ fn open_settings_file() {
             10, // SW_SHOWDEFAULT
         );
     }
-}
-
-pub unsafe fn dispatch_message(msg: &mut windows::Win32::UI::WindowsAndMessaging::MSG) {
-    DispatchMessageW(msg);
 }

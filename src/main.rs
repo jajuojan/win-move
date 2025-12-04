@@ -8,8 +8,8 @@ use win_move::windows::system_tray::SystemTray;
 fn main() {
     env_logger::init();
 
-    // Create system tray icon
-    let _tray = SystemTray::new().expect("Failed to create system tray icon");
+    // Create system tray icon - kept in scope for the entire application lifetime
+    let _tray_instance = SystemTray::new().expect("Failed to create system tray icon");
 
     let keys = get_config_hotkeys();
 
