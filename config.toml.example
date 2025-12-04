@@ -1,6 +1,12 @@
 # win-move configuration file
-# Place this file as 'config.toml' in the same directory as the win-move executable
-# to customize hotkey bindings.
+# 
+# This file can be placed in one of the following locations (in order of priority):
+# 1. %PROGRAMDATA%\win-move\config.toml (e.g., C:\ProgramData\win-move\config.toml) - System defaults
+# 2. %APPDATA%\win-move\config.toml (e.g., C:\Users\YourName\AppData\Roaming\win-move\config.toml) - User overrides
+# 3. config.toml in the same directory as the win-move executable - Portable mode
+#
+# Later files override earlier ones, so you can set system-wide defaults in PROGRAMDATA
+# and customize them per-user in APPDATA, or use portable mode with the executable directory.
 
 # Each hotkey has three fields:
 # - action: The action to perform (see list below)
