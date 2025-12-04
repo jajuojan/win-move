@@ -73,36 +73,85 @@ impl Default for Config {
     }
 }
 
-fn get_config_path() -> PathBuf {
+/// Get all possible config paths in order of priority (lowest to highest)
+/// Returns: [PROGRAMDATA path, APPDATA path, exe directory path]
+fn get_config_paths() -> Vec<PathBuf> {
+    let mut paths = Vec::new();
+
+    // 1. PROGRAMDATA (system defaults) - lowest priority
+    #[cfg(target_os = "windows")]
+    if let Ok(programdata) = std::env::var("PROGRAMDATA") {
+        let path = PathBuf::from(programdata)
+            .join("win-move")
+            .join("config.toml");
+        paths.push(path);
+    }
+
+    // 2. APPDATA (user overrides) - medium priority
+    #[cfg(target_os = "windows")]
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        let path = PathBuf::from(appdata).join("win-move").join("config.toml");
+        paths.push(path);
+    }
+
+    // 3. Exe directory (portable mode or local overrides) - highest priority
     let exe_path = std::env::current_exe().unwrap_or_default();
     let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("."));
-    exe_dir.join("config.toml")
+    paths.push(exe_dir.join("config.toml"));
+
+    paths
 }
 
-pub fn load_config() -> Config {
-    let config_path = get_config_path();
-
-    if let Ok(contents) = fs::read_to_string(&config_path) {
+/// Load a config file from a specific path
+fn load_config_from_path(path: &PathBuf) -> Option<Config> {
+    if let Ok(contents) = fs::read_to_string(path) {
         match toml::from_str(&contents) {
             Ok(config) => {
-                log::info!("Loaded configuration from {:?}", config_path);
-                return config;
+                log::info!("Loaded configuration from {:?}", path);
+                return Some(config);
             }
             Err(e) => {
                 log::warn!(
-                    "Failed to parse config file: {}. Using default configuration.",
+                    "Failed to parse config file at {:?}: {}. Skipping this file.",
+                    path,
                     e
                 );
             }
         }
+    }
+    None
+}
+
+/// Merge two configs, with the second config overriding the first
+fn merge_configs(base: Config, override_config: Config) -> Config {
+    // If override has hotkeys, use them; otherwise keep base hotkeys
+    let hotkeys = if !override_config.hotkeys.is_empty() {
+        override_config.hotkeys
     } else {
-        log::info!(
-            "No config file found at {:?}. Using default configuration.",
-            config_path
-        );
+        base.hotkeys
+    };
+
+    Config { hotkeys }
+}
+
+pub fn load_config() -> Config {
+    let paths = get_config_paths();
+    let mut config = Config::default();
+    let mut loaded_any = false;
+
+    // Load configs in order of priority, merging as we go
+    for path in paths {
+        if let Some(loaded_config) = load_config_from_path(&path) {
+            config = merge_configs(config, loaded_config);
+            loaded_any = true;
+        }
     }
 
-    Config::default()
+    if !loaded_any {
+        log::info!("No config files found. Using default configuration.");
+    }
+
+    config
 }
 
 pub fn get_config_hotkeys() -> Vec<HotkeyMapping> {
@@ -148,5 +197,74 @@ modifier = "ModControl"
             HotKeyAction::MoveWindowToLeftBottom
         );
         assert_eq!(config.hotkeys[1].action, HotKeyAction::MoveWindowToTop);
+    }
+
+    #[test]
+    fn test_merge_configs() {
+        let base = Config {
+            hotkeys: vec![
+                HotkeyMapping {
+                    action: HotKeyAction::MoveWindowToLeftBottom,
+                    key: HotKeyButton::VkNumpad1,
+                    modifier: HotKeyModifier::ModControl,
+                },
+                HotkeyMapping {
+                    action: HotKeyAction::MoveWindowToTop,
+                    key: HotKeyButton::VkNumpad8,
+                    modifier: HotKeyModifier::ModControl,
+                },
+            ],
+        };
+
+        let override_config = Config {
+            hotkeys: vec![HotkeyMapping {
+                action: HotKeyAction::MaximizeWindow,
+                key: HotKeyButton::VkNumpad5,
+                modifier: HotKeyModifier::ModControl,
+            }],
+        };
+
+        let merged = merge_configs(base, override_config);
+        assert_eq!(merged.hotkeys.len(), 1);
+        assert_eq!(merged.hotkeys[0].action, HotKeyAction::MaximizeWindow);
+    }
+
+    #[test]
+    fn test_merge_configs_empty_override() {
+        let base = Config {
+            hotkeys: vec![HotkeyMapping {
+                action: HotKeyAction::MoveWindowToLeftBottom,
+                key: HotKeyButton::VkNumpad1,
+                modifier: HotKeyModifier::ModControl,
+            }],
+        };
+
+        let override_config = Config { hotkeys: vec![] };
+
+        let merged = merge_configs(base, override_config);
+        assert_eq!(merged.hotkeys.len(), 1);
+        assert_eq!(
+            merged.hotkeys[0].action,
+            HotKeyAction::MoveWindowToLeftBottom
+        );
+    }
+
+    #[test]
+    #[cfg(target_os = "windows")]
+    fn test_get_config_paths_windows() {
+        let paths = get_config_paths();
+        // Should have at least exe directory path, possibly PROGRAMDATA and APPDATA
+        assert!(!paths.is_empty());
+        // Last path should be exe directory
+        assert!(paths.last().unwrap().ends_with("config.toml"));
+    }
+
+    #[test]
+    #[cfg(not(target_os = "windows"))]
+    fn test_get_config_paths_non_windows() {
+        let paths = get_config_paths();
+        // Should have only exe directory path on non-Windows
+        assert_eq!(paths.len(), 1);
+        assert!(paths[0].ends_with("config.toml"));
     }
 }
