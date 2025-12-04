@@ -78,23 +78,25 @@ impl Default for Config {
 fn get_config_paths() -> Vec<PathBuf> {
     let mut paths = Vec::new();
 
+    // Helper function to build config path from a directory
+    #[cfg(target_os = "windows")]
+    let build_config_path = |dir: String| PathBuf::from(dir).join("win-move").join("config.toml");
+
     // 1. PROGRAMDATA (system defaults) - lowest priority
     #[cfg(target_os = "windows")]
     if let Ok(programdata) = std::env::var("PROGRAMDATA") {
-        let path = PathBuf::from(programdata)
-            .join("win-move")
-            .join("config.toml");
-        paths.push(path);
+        paths.push(build_config_path(programdata));
     }
 
     // 2. APPDATA (user overrides) - medium priority
     #[cfg(target_os = "windows")]
     if let Ok(appdata) = std::env::var("APPDATA") {
-        let path = PathBuf::from(appdata).join("win-move").join("config.toml");
-        paths.push(path);
+        paths.push(build_config_path(appdata));
     }
 
     // 3. Exe directory (portable mode or local overrides) - highest priority
+    // Note: current_exe().unwrap_or_default() returns empty PathBuf on failure,
+    // which causes parent() to return None, falling back to current directory "."
     let exe_path = std::env::current_exe().unwrap_or_default();
     let exe_dir = exe_path.parent().unwrap_or(std::path::Path::new("."));
     paths.push(exe_dir.join("config.toml"));
