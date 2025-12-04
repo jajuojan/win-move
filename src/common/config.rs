@@ -123,13 +123,26 @@ fn load_config_from_path(path: &PathBuf) -> Option<Config> {
 }
 
 /// Merge two configs, with the second config overriding the first
+/// Hotkeys in the override config will replace hotkeys with the same key+modifier combination
+/// from the base config, while preserving other base hotkeys
 fn merge_configs(base: Config, override_config: Config) -> Config {
-    // If override has hotkeys, use them; otherwise keep base hotkeys
-    let hotkeys = if !override_config.hotkeys.is_empty() {
-        override_config.hotkeys
-    } else {
-        base.hotkeys
-    };
+    let mut hotkeys = base.hotkeys;
+
+    // For each override hotkey, either replace an existing one with the same key+modifier
+    // or add it as a new hotkey
+    for override_hotkey in override_config.hotkeys {
+        // Find if there's an existing hotkey with the same key+modifier combination
+        if let Some(pos) = hotkeys
+            .iter()
+            .position(|h| h.key == override_hotkey.key && h.modifier == override_hotkey.modifier)
+        {
+            // Replace the existing hotkey
+            hotkeys[pos] = override_hotkey;
+        } else {
+            // Add as a new hotkey
+            hotkeys.push(override_hotkey);
+        }
+    }
 
     Config { hotkeys }
 }
@@ -225,8 +238,64 @@ modifier = "ModControl"
         };
 
         let merged = merge_configs(base, override_config);
-        assert_eq!(merged.hotkeys.len(), 1);
-        assert_eq!(merged.hotkeys[0].action, HotKeyAction::MaximizeWindow);
+        // Should have 3 hotkeys: 2 from base + 1 new from override
+        assert_eq!(merged.hotkeys.len(), 3);
+        // Check that all are present
+        assert!(merged
+            .hotkeys
+            .iter()
+            .any(|h| h.action == HotKeyAction::MoveWindowToLeftBottom));
+        assert!(merged
+            .hotkeys
+            .iter()
+            .any(|h| h.action == HotKeyAction::MoveWindowToTop));
+        assert!(merged
+            .hotkeys
+            .iter()
+            .any(|h| h.action == HotKeyAction::MaximizeWindow));
+    }
+
+    #[test]
+    fn test_merge_configs_replace_existing() {
+        let base = Config {
+            hotkeys: vec![
+                HotkeyMapping {
+                    action: HotKeyAction::MoveWindowToLeftBottom,
+                    key: HotKeyButton::VkNumpad1,
+                    modifier: HotKeyModifier::ModControl,
+                },
+                HotkeyMapping {
+                    action: HotKeyAction::MoveWindowToTop,
+                    key: HotKeyButton::VkNumpad8,
+                    modifier: HotKeyModifier::ModControl,
+                },
+            ],
+        };
+
+        // Override the VkNumpad1 + ModControl binding with a different action
+        let override_config = Config {
+            hotkeys: vec![HotkeyMapping {
+                action: HotKeyAction::MaximizeWindow,
+                key: HotKeyButton::VkNumpad1,
+                modifier: HotKeyModifier::ModControl,
+            }],
+        };
+
+        let merged = merge_configs(base, override_config);
+        // Should still have 2 hotkeys (one was replaced)
+        assert_eq!(merged.hotkeys.len(), 2);
+        // The VkNumpad1 binding should now be MaximizeWindow, not MoveWindowToLeftBottom
+        let numpad1_hotkey = merged
+            .hotkeys
+            .iter()
+            .find(|h| h.key == HotKeyButton::VkNumpad1)
+            .unwrap();
+        assert_eq!(numpad1_hotkey.action, HotKeyAction::MaximizeWindow);
+        // VkNumpad8 should still be there
+        assert!(merged
+            .hotkeys
+            .iter()
+            .any(|h| h.action == HotKeyAction::MoveWindowToTop));
     }
 
     #[test]
@@ -242,6 +311,7 @@ modifier = "ModControl"
         let override_config = Config { hotkeys: vec![] };
 
         let merged = merge_configs(base, override_config);
+        // Empty override should keep base unchanged
         assert_eq!(merged.hotkeys.len(), 1);
         assert_eq!(
             merged.hotkeys[0].action,
