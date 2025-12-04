@@ -9,6 +9,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown: "10 days"
     commit-message:
       prefix: "chore"
     labels:
@@ -20,6 +21,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown: "10 days"
     commit-message:
       prefix: "chore"
     labels:
