@@ -1,5 +1,5 @@
 /// Enums for buttons
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum HotKeyButton {
     VkNumpad0,
     VkNumpad1,
@@ -15,7 +15,7 @@ pub enum HotKeyButton {
 }
 
 /// Enums for modifiers
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum HotKeyModifier {
     None,
     ModControl,
