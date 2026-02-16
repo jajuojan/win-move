@@ -27,7 +27,7 @@ winres = "0.1.12"
 num = "0.4.3"
 enum_primitive = "0.1.1"
 log = "0.4.27"
-env_logger = "0.11.8"
+env_logger = "0.11.9"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8"
 
