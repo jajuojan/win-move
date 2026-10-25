@@ -11,13 +11,19 @@ Moves windows on desktop via keyboard shortcuts.
 * Windows 10/11
 
 ## Configuration
-win-move supports custom hotkey bindings via a configuration file. To customize:
+win-move supports custom hotkey bindings via a configuration file. Configuration files are loaded from multiple locations in the following order of priority (later files override earlier ones):
 
-1. Copy `config.toml.example` to `config.toml` in the same directory as the executable
+1. **System defaults**: `%PROGRAMDATA%\win-move\config.toml` (e.g., `C:\ProgramData\win-move\config.toml`)
+2. **User overrides**: `%APPDATA%\win-move\config.toml` (e.g., `C:\Users\YourName\AppData\Roaming\win-move\config.toml`)
+3. **Portable mode**: `config.toml` in the same directory as the executable
+
+To customize your hotkeys:
+
+1. Copy `config.toml.example` to one of the locations above
 2. Edit the hotkeys to your preference
 3. Restart win-move
 
-If no configuration file is found, win-move will use the default hotkey bindings shown above.
+If no configuration file is found in any location, win-move will use the default hotkey bindings shown above.
 
 See `config.toml.example` for all available actions and configuration options.
 
