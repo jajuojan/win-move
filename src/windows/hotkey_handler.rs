@@ -4,6 +4,7 @@ use windows::Win32::UI::Input::KeyboardAndMouse;
 use windows::Win32::UI::Input::KeyboardAndMouse::{RegisterHotKey, HOT_KEY_MODIFIERS, VIRTUAL_KEY};
 use windows::Win32::UI::WindowsAndMessaging::{GetMessageW, MSG};
 
+
 use crate::common::{hotkey_action::HotKeyAction, structs::HotkeyMapping, traits::HotkeyHandler};
 
 pub struct WindowsHotKeyHandler {}
@@ -18,7 +19,7 @@ impl WindowsHotKeyHandler {
             let VIRTUAL_KEY(key_usize) = hot_key.key;
             unsafe {
                 RegisterHotKey(
-                    HWND(0),
+                    None,
                     hot_key.action as i32,
                     hot_key.modifier,
                     key_usize.into(),
@@ -42,7 +43,7 @@ impl HotkeyHandler for WindowsHotKeyHandler {
 
     fn get_action_from_pressed_key(&self) -> HotKeyAction {
         let mut message = MSG {
-            hwnd: HWND(0),
+            hwnd: HWND(std::ptr::null_mut()),
             message: 0,
             wParam: WPARAM(0),
             lParam: LPARAM(0),
@@ -51,7 +52,7 @@ impl HotkeyHandler for WindowsHotKeyHandler {
         };
 
         unsafe {
-            let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
+            let _message_return = GetMessageW(&mut message, None, 0, 0);
         }
 
         let WPARAM(pressed_key_usize) = message.wParam;

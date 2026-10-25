@@ -30,7 +30,7 @@ impl WindowsWindow {
             "get_platform_specific_handle: {:?}",
             self.platform_specific_handle
         );
-        HWND(self.platform_specific_handle)
+        HWND(self.platform_specific_handle as *mut _)
     }
 
     fn show_window(&self, ncmdshow: SHOW_WINDOW_CMD) {

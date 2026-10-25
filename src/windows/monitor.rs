@@ -58,7 +58,7 @@ impl Monitor for WindowsMonitor {
     }
 
     fn get_platform_specific_handle(&self) -> isize {
-        self.platform_specific_handle.0
+        self.platform_specific_handle.0 as isize
     }
 }
 

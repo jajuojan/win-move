@@ -4,12 +4,12 @@ version = "0.2.0"
 authors = ["Jani Ojanen <jajuojan@gmail.com>"]
 edition = "2021"
 readme = "README.md"
-description="Move windows on desktop via shortcuts"
+description = "Move windows on desktop via shortcuts"
 repository = "https://github.com/jajuojan/win-move"
 license = "MIT"
 
 [dependencies.windows]
-version = "0.56"
+version = "0.62.2"
 features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",
@@ -17,7 +17,7 @@ features = [
     "Win32_UI_WindowsAndMessaging",
     "Win32_UI_Input",
     "Win32_UI_Input_KeyboardAndMouse",
-    "Win32_UI_HiDpi"
+    "Win32_UI_HiDpi",
 ]
 
 [target.'cfg(windows)'.build-dependencies]
