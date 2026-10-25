@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/jajuojan/win-move/compare/v0.2.0...v0.3.0) (2026-10-25)
+
+
+### Features
+
+* [#128](https://github.com/jajuojan/win-move/issues/128) Support config files in user directories ([#134](https://github.com/jajuojan/win-move/issues/134)) ([7377457](https://github.com/jajuojan/win-move/commit/737745796f53dbaa11e980aad890c1f2b7b54300))
+* Add initial logging ([9dce5e8](https://github.com/jajuojan/win-move/commit/9dce5e86f598951a2dd49c9f29fbb49e7ec79153))
+* Add support for configuring hot-keys ([a698760](https://github.com/jajuojan/win-move/commit/a698760ca9dbed5a6659dec9256841d624ebcfec))
+
+
+### Bug Fixes
+
+* [#68](https://github.com/jajuojan/win-move/issues/68) Respect window-state when switching monitor ([2d47e01](https://github.com/jajuojan/win-move/commit/2d47e01cc5325b2530f511d13d6befefab992e96))
+
 ## [0.2.0](https://github.com/jajuojan/win-move/compare/v0.1.1...v0.2.0) (2022-05-30)
 
 
