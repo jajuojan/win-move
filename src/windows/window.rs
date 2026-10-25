@@ -52,8 +52,13 @@ impl WindowsWindow {
         };
 
         unsafe {
-            if let Err(err) = GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info) {
-                error!("get_window_internal_info: GetWindowPlacement failed: {:?}", err);
+            if let Err(err) =
+                GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info)
+            {
+                error!(
+                    "get_window_internal_info: GetWindowPlacement failed: {:?}",
+                    err
+                );
             }
         };
         info!("get_window_internal_info: {:?}", window_info);
@@ -135,7 +140,8 @@ impl Window for WindowsWindow {
         let mut window_info = self.get_window_internal_info();
         window_info.showCmd = SW_SHOWNORMAL.0 as u32;
         unsafe {
-            if let Err(err) = SetWindowPlacement(self.get_platform_specific_handle(), &window_info) {
+            if let Err(err) = SetWindowPlacement(self.get_platform_specific_handle(), &window_info)
+            {
                 error!("disable_snapping: SetWindowPlacement failed: {:?}", err);
             }
         }

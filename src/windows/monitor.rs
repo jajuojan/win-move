@@ -27,7 +27,10 @@ impl WindowsMonitor {
         unsafe {
             if GetMonitorInfoW(self.platform_specific_handle, &mut monitor_info).0 == 0 {
                 let last_error = GetLastError();
-                error!("get_monitor_info: GetMonitorInfoW failed with error code 0x{:08X}", last_error.0);
+                error!(
+                    "get_monitor_info: GetMonitorInfoW failed with error code 0x{:08X}",
+                    last_error.0
+                );
             }
         }
         monitor_info

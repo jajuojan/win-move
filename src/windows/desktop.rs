@@ -1,9 +1,9 @@
+use windows::core::BOOL;
 use windows::Win32::Foundation::{LPARAM, RECT};
 use windows::Win32::Graphics::Gdi::EnumDisplayMonitors;
 use windows::Win32::Graphics::Gdi::HDC;
 use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow;
-use windows::core::BOOL;
 
 use crate::common::traits::{Desktop, Monitor, Window};
 use crate::windows::window::WindowsWindow;
@@ -31,7 +31,7 @@ impl Desktop for WindowsDesktop {
 
     fn get_all_monitors(&self) -> Vec<Box<dyn Monitor>> {
         let monitors: Box<Vec<HMONITOR>>;
-        
+
         unsafe {
             let monitors_pointer = Box::into_raw(Box::new(Vec::<HMONITOR>::new()));
             let _res_bool = EnumDisplayMonitors(
