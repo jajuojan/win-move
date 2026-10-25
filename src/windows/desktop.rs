@@ -1,6 +1,4 @@
-use core::ptr;
-
-use windows::Win32::Foundation::BOOL;
+use windows::core::BOOL;
 use windows::Win32::Foundation::{LPARAM, RECT};
 use windows::Win32::Graphics::Gdi::EnumDisplayMonitors;
 use windows::Win32::Graphics::Gdi::HDC;
@@ -27,17 +25,18 @@ impl Desktop for WindowsDesktop {
             foreground_window = GetForegroundWindow();
         }
         Box::new(WindowsWindow {
-            platform_specific_handle: foreground_window.0,
+            platform_specific_handle: foreground_window.0 as isize,
         })
     }
 
     fn get_all_monitors(&self) -> Vec<Box<dyn Monitor>> {
         let monitors: Box<Vec<HMONITOR>>;
+
         unsafe {
             let monitors_pointer = Box::into_raw(Box::new(Vec::<HMONITOR>::new()));
             let _res_bool = EnumDisplayMonitors(
-                HDC(0),
-                ptr::null_mut(),
+                None,
+                None,
                 Some(monitor_enum_fn),
                 LPARAM(monitors_pointer as isize),
             );

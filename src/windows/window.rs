@@ -30,13 +30,13 @@ impl WindowsWindow {
             "get_platform_specific_handle: {:?}",
             self.platform_specific_handle
         );
-        HWND(self.platform_specific_handle)
+        HWND(self.platform_specific_handle as *mut _)
     }
 
     fn show_window(&self, ncmdshow: SHOW_WINDOW_CMD) {
         info!("show_window: command: {:?}", ncmdshow);
         unsafe {
-            ShowWindow(self.get_platform_specific_handle(), ncmdshow);
+            let _ = ShowWindow(self.get_platform_specific_handle(), ncmdshow);
         }
     }
 
@@ -45,14 +45,21 @@ impl WindowsWindow {
         let mut window_info = WINDOWPLACEMENT {
             length: u32::try_from(size_of::<WINDOWPLACEMENT>()).unwrap(),
             flags: WINDOWPLACEMENT_FLAGS(0),
-            showCmd: SHOW_WINDOW_CMD(0),
+            showCmd: 0,
             ptMinPosition: POINT { x: 0, y: 0 },
             ptMaxPosition: POINT { x: 0, y: 0 },
             rcNormalPosition: get_rect_struct(),
         };
 
         unsafe {
-            GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info);
+            if let Err(err) =
+                GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info)
+            {
+                error!(
+                    "get_window_internal_info: GetWindowPlacement failed: {:?}",
+                    err
+                );
+            }
         };
         info!("get_window_internal_info: {:?}", window_info);
         window_info
@@ -70,14 +77,16 @@ impl Window for WindowsWindow {
         );
         let a = WindowPosition::from(windows_rect);
         unsafe {
-            MoveWindow(
+            if let Err(err) = MoveWindow(
                 self.get_platform_specific_handle(),
                 windows_rect.left,
                 windows_rect.top,
                 a.width,
                 a.height,
                 true,
-            );
+            ) {
+                error!("move_window: MoveWindow failed: {:?}", err);
+            }
         }
         if log::log_enabled!(log::Level::Info) {
             self.get_window_internal_info();
@@ -86,11 +95,14 @@ impl Window for WindowsWindow {
 
     fn get_state(&self) -> crate::common::enums::WindowState {
         let window_info = self.get_window_internal_info();
-        let state = match window_info.showCmd {
-            SW_SHOWNORMAL => WindowState::Normal,
-            SW_SHOWMINIMIZED => WindowState::Minimized,
-            SW_SHOWMAXIMIZED => WindowState::Maximized,
-            _ => WindowState::Other,
+        let state = if window_info.showCmd == SW_SHOWNORMAL.0 as u32 {
+            WindowState::Normal
+        } else if window_info.showCmd == SW_SHOWMINIMIZED.0 as u32 {
+            WindowState::Minimized
+        } else if window_info.showCmd == SW_SHOWMAXIMIZED.0 as u32 {
+            WindowState::Maximized
+        } else {
+            WindowState::Other
         };
         info!("get_state: state: {:?}", state);
         state
@@ -114,7 +126,9 @@ impl Window for WindowsWindow {
     fn get_position(&self) -> crate::common::structs::Rect {
         let mut r = get_rect_struct();
         unsafe {
-            GetWindowRect(self.get_platform_specific_handle(), &mut r);
+            if let Err(err) = GetWindowRect(self.get_platform_specific_handle(), &mut r) {
+                error!("get_position: GetWindowRect failed: {:?}", err);
+            }
         }
         let rect = Rect::from(&r);
         info!("get_position: {:?}", rect);
@@ -124,9 +138,12 @@ impl Window for WindowsWindow {
     fn disable_snapping(&self) {
         info!("disable_snapping");
         let mut window_info = self.get_window_internal_info();
-        window_info.showCmd = SW_SHOWNORMAL;
+        window_info.showCmd = SW_SHOWNORMAL.0 as u32;
         unsafe {
-            SetWindowPlacement(self.get_platform_specific_handle(), &window_info);
+            if let Err(err) = SetWindowPlacement(self.get_platform_specific_handle(), &window_info)
+            {
+                error!("disable_snapping: SetWindowPlacement failed: {:?}", err);
+            }
         }
     }
 

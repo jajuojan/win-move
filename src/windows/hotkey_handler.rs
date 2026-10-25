@@ -13,30 +13,35 @@ impl WindowsHotKeyHandler {
         Self {}
     }
 
-    fn do_register_hotkeys(&self, hot_keys: Vec<HotkeyMappingWin>) {
+    fn do_register_hotkeys(&self, hot_keys: Vec<HotkeyMappingWin>) -> windows::core::Result<()> {
         for hot_key in hot_keys.iter() {
             let VIRTUAL_KEY(key_usize) = hot_key.key;
             unsafe {
                 RegisterHotKey(
-                    HWND(0),
+                    None,
                     hot_key.action as i32,
                     hot_key.modifier,
                     key_usize.into(),
-                );
+                )?;
             }
         }
+        Ok(())
     }
 }
 
 impl HotkeyHandler for WindowsHotKeyHandler {
-    fn register_hotkeys(&self, keys: Vec<HotkeyMapping>) {
-        let hot_keys = map_keys_from_config(keys);
-        self.do_register_hotkeys(hot_keys);
+    fn register_hotkeys(
+        &self,
+        _keys: Vec<HotkeyMapping>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let hot_keys = map_keys_from_config(_keys);
+        self.do_register_hotkeys(hot_keys)?;
+        Ok(())
     }
 
     fn get_action_from_pressed_key(&self) -> HotKeyAction {
         let mut message = MSG {
-            hwnd: HWND(0),
+            hwnd: HWND(std::ptr::null_mut()),
             message: 0,
             wParam: WPARAM(0),
             lParam: LPARAM(0),
@@ -45,7 +50,7 @@ impl HotkeyHandler for WindowsHotKeyHandler {
         };
 
         unsafe {
-            let _message_return = GetMessageW(&mut message, HWND(0), 0, 0);
+            let _message_return = GetMessageW(&mut message, None, 0, 0);
         }
 
         let WPARAM(pressed_key_usize) = message.wParam;

@@ -31,6 +31,6 @@ pub trait Monitor {
 }
 
 pub trait HotkeyHandler {
-    fn register_hotkeys(&self, keys: Vec<HotkeyMapping>);
+    fn register_hotkeys(&self, keys: Vec<HotkeyMapping>) -> Result<(), Box<dyn std::error::Error>>;
     fn get_action_from_pressed_key(&self) -> HotKeyAction;
 }
