@@ -36,7 +36,7 @@ impl WindowsWindow {
     fn show_window(&self, ncmdshow: SHOW_WINDOW_CMD) {
         info!("show_window: command: {:?}", ncmdshow);
         unsafe {
-            ShowWindow(self.get_platform_specific_handle(), ncmdshow);
+            let _ = ShowWindow(self.get_platform_specific_handle(), ncmdshow);
         }
     }
 
@@ -52,7 +52,9 @@ impl WindowsWindow {
         };
 
         unsafe {
-            GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info);
+            if let Err(err) = GetWindowPlacement(self.get_platform_specific_handle(), &mut window_info) {
+                error!("get_window_internal_info: GetWindowPlacement failed: {:?}", err);
+            }
         };
         info!("get_window_internal_info: {:?}", window_info);
         window_info
@@ -70,14 +72,16 @@ impl Window for WindowsWindow {
         );
         let a = WindowPosition::from(windows_rect);
         unsafe {
-            MoveWindow(
+            if let Err(err) = MoveWindow(
                 self.get_platform_specific_handle(),
                 windows_rect.left,
                 windows_rect.top,
                 a.width,
                 a.height,
                 true,
-            );
+            ) {
+                error!("move_window: MoveWindow failed: {:?}", err);
+            }
         }
         if log::log_enabled!(log::Level::Info) {
             self.get_window_internal_info();
@@ -117,7 +121,9 @@ impl Window for WindowsWindow {
     fn get_position(&self) -> crate::common::structs::Rect {
         let mut r = get_rect_struct();
         unsafe {
-            GetWindowRect(self.get_platform_specific_handle(), &mut r);
+            if let Err(err) = GetWindowRect(self.get_platform_specific_handle(), &mut r) {
+                error!("get_position: GetWindowRect failed: {:?}", err);
+            }
         }
         let rect = Rect::from(&r);
         info!("get_position: {:?}", rect);
@@ -129,7 +135,9 @@ impl Window for WindowsWindow {
         let mut window_info = self.get_window_internal_info();
         window_info.showCmd = SW_SHOWNORMAL.0 as u32;
         unsafe {
-            SetWindowPlacement(self.get_platform_specific_handle(), &window_info);
+            if let Err(err) = SetWindowPlacement(self.get_platform_specific_handle(), &window_info) {
+                error!("disable_snapping: SetWindowPlacement failed: {:?}", err);
+            }
         }
     }
 

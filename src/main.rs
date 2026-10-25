@@ -4,7 +4,7 @@ use win_move::common::traits::HotkeyHandler;
 use win_move::windows::desktop::WindowsDesktop;
 use win_move::windows::hotkey_handler::WindowsHotKeyHandler;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
     let keys = get_config_hotkeys();
@@ -12,6 +12,7 @@ fn main() {
     let hotkey_handler = WindowsHotKeyHandler::new();
     let system = WindowsDesktop::new();
 
-    hotkey_handler.register_hotkeys(keys);
+    hotkey_handler.register_hotkeys(keys)?;
     main_loop(&hotkey_handler, &system);
+    Ok(())
 }

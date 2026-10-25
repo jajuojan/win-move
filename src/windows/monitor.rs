@@ -1,3 +1,5 @@
+use log::error;
+use windows::Win32::Foundation::GetLastError;
 use windows::Win32::Graphics::Gdi::GetMonitorInfoW;
 use windows::Win32::Graphics::Gdi::HMONITOR;
 use windows::Win32::Graphics::Gdi::MONITORINFO;
@@ -23,7 +25,10 @@ impl WindowsMonitor {
     fn get_monitor_info(&self) -> MONITORINFO {
         let mut monitor_info = get_monitor_info_struct();
         unsafe {
-            GetMonitorInfoW(self.platform_specific_handle, &mut monitor_info);
+            if GetMonitorInfoW(self.platform_specific_handle, &mut monitor_info).0 == 0 {
+                let last_error = GetLastError();
+                error!("get_monitor_info: GetMonitorInfoW failed with error code 0x{:08X}", last_error.0);
+            }
         }
         monitor_info
     }
